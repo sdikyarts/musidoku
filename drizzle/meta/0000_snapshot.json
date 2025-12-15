@@ -1,0 +1,190 @@
+{
+  "id": "60be51c7-8a22-4c25-88e1-ff4a7608850d",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.artists": {
+      "name": "artists",
+      "schema": "",
+      "columns": {
+        "spotify_id": {
+          "name": "spotify_id",
+          "type": "varchar(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "scraper_name": {
+          "name": "scraper_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chartmasters_name": {
+          "name": "chartmasters_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scraper_image_url": {
+          "name": "scraper_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mb_id": {
+          "name": "mb_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mb_type_raw": {
+          "name": "mb_type_raw",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parsed_artist_type": {
+          "name": "parsed_artist_type",
+          "type": "parsed_artist_type_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender": {
+          "name": "gender",
+          "type": "gender_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "death_date": {
+          "name": "death_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "disband_date": {
+          "name": "disband_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "debut_year": {
+          "name": "debut_year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "member_count": {
+          "name": "member_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "genres": {
+          "name": "genres",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "primary_genre": {
+          "name": "primary_genre",
+          "type": "genre_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "secondary_genre": {
+          "name": "secondary_genre",
+          "type": "genre_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_dead": {
+          "name": "is_dead",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_disbanded": {
+          "name": "is_disbanded",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.gender_enum": {
+      "name": "gender_enum",
+      "schema": "public",
+      "values": [
+        "male",
+        "female",
+        "non-binary",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "public.genre_enum": {
+      "name": "genre_enum",
+      "schema": "public",
+      "values": [
+        "afrobeats",
+        "alternative",
+        "country",
+        "electronic",
+        "hip hop",
+        "k-pop",
+        "latin",
+        "metal",
+        "other",
+        "pop",
+        "r&b",
+        "reggae",
+        "rock"
+      ]
+    },
+    "public.parsed_artist_type_enum": {
+      "name": "parsed_artist_type_enum",
+      "schema": "public",
+      "values": [
+        "solo",
+        "group",
+        "unknown"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
