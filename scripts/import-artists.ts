@@ -11,9 +11,40 @@ type ParsedArtistType = NewArtist["parsed_artist_type"];
 type Gender = NewArtist["gender"];
 type Genre = NewArtist["primary_genre"];
 
-const parsedArtistTypes = new Set<ParsedArtistType>(["solo", "group", "unknown"]);
-const genderTypes = new Set<Gender>(["male", "female", "non-binary", "mixed", "unknown"]);
-const genreTypes = new Set<Genre>([
+type ValueNormalizer<T> = {
+  normalize: (value: unknown) => T;
+};
+
+type FileReader = {
+  read: (filePath: string) => Promise<string>;
+};
+
+type CsvParser = {
+  parse: (raw: string) => CsvRow[];
+};
+
+type ArtistRepository = {
+  upsertBatch: (values: NewArtist[]) => Promise<void>;
+};
+
+type Normalizers = {
+  parsedArtistType: ValueNormalizer<ParsedArtistType>;
+  gender: ValueNormalizer<Gender>;
+  primaryGenre: ValueNormalizer<Genre>;
+  secondaryGenre: ValueNormalizer<NewArtist["secondary_genre"]>;
+};
+
+type ImporterDependencies = {
+  reader: FileReader;
+  parser: CsvParser;
+  repository: ArtistRepository;
+  chunkSize?: number;
+  normalizers?: Normalizers;
+};
+
+const parsedArtistTypeValues = ["solo", "group", "unknown"] as const;
+const genderValues = ["male", "female", "non-binary", "mixed", "unknown"] as const;
+const genreValues = [
   "afrobeats",
   "alternative",
   "country",
@@ -27,112 +58,29 @@ const genreTypes = new Set<Genre>([
   "r&b",
   "reggae",
   "rock",
-]);
+] as const;
 
-function toNull(v: unknown) {
-  if (v === undefined || v === null) return null;
-  const s = String(v).trim();
-  return s === "" ? null : s;
+function toSafeString(value: unknown): string {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "object") return "";
+  return String(value);
 }
 
-function toInt(v: unknown) {
-  const s = toNull(v);
-  if (s === null) return null;
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-}
+const nodeFileReader: FileReader = {
+  read: (filePath) => fs.promises.readFile(filePath, "utf8"),
+};
 
-function toBool(v: unknown) {
-  const s = toNull(v);
-  if (s === null) return null;
-  const t = String(s).toLowerCase();
-  if (t === "true" || t === "1" || t === "yes") return true;
-  if (t === "false" || t === "0" || t === "no") return false;
-  return null;
-}
+const csvSyncParser: CsvParser = {
+  parse: (raw) =>
+    parse<CsvRow>(raw, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    }),
+};
 
-function norm(v: unknown) {
-  return String(v ?? "").trim().toLowerCase();
-}
-
-function isParsedArtistType(value: string): value is ParsedArtistType {
-  return parsedArtistTypes.has(value as ParsedArtistType);
-}
-
-function isGender(value: string): value is Gender {
-  return genderTypes.has(value as Gender);
-}
-
-function isGenre(value: string): value is Genre {
-  return genreTypes.has(value as Genre);
-}
-
-function toParsedArtistType(v: unknown): ParsedArtistType {
-  const value = norm(v);
-  return isParsedArtistType(value) ? value : "unknown";
-}
-
-function toGender(v: unknown): Gender {
-  const value = norm(v);
-  return isGender(value) ? value : "unknown";
-}
-
-function toGenre(v: unknown): Genre {
-  const value = norm(v);
-  return isGenre(value) ? value : "other";
-}
-
-function toSecondaryGenre(v: unknown): NewArtist["secondary_genre"] {
-  const value = toNull(v);
-  if (value === null) return null;
-  const normalized = norm(value);
-  return isGenre(normalized) ? normalized : null;
-}
-
-const batchSize = 1000;
-
-try {
-  const csvPath = path.join(process.cwd(), "artist.csv");
-  const raw = fs.readFileSync(csvPath, "utf8");
-
-  const rows = parse<CsvRow>(raw, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
-  });
-
-  for (let i = 0; i < rows.length; i += batchSize) {
-    const chunk = rows.slice(i, i + batchSize);
-
-    const values: NewArtist[] = chunk.map((r) => ({
-      spotify_id: String(r.spotify_id),
-      scraper_name: String(r.scraper_name),
-      chartmasters_name: toNull(r.chartmasters_name),
-      scraper_image_url: toNull(r.scraper_image_url),
-
-      mb_id: String(r.mb_id),
-      mb_type_raw: String(r.mb_type_raw),
-      parsed_artist_type: toParsedArtistType(r.parsed_artist_type),
-
-      gender: toGender(r.gender),
-      country: String(r.country),
-
-      birth_date: toNull(r.birth_date),
-      death_date: toNull(r.death_date),
-      disband_date: toNull(r.disband_date),
-
-      debut_year: toInt(r.debut_year),
-      member_count: toInt(r.member_count),
-
-      genres: String(r.genres),
-
-      primary_genre: toGenre(r.primary_genre),
-      secondary_genre: toSecondaryGenre(r.secondary_genre),
-
-      is_dead: toBool(r.is_dead),
-      is_disbanded: toBool(r.is_disbanded),
-    }));
-
+const drizzleArtistRepository: ArtistRepository = {
+  upsertBatch: async (values) => {
     await db
       .insert(artists)
       .values(values)
@@ -159,9 +107,121 @@ try {
           is_disbanded: sql`excluded.is_disbanded`,
         },
       });
+  },
+};
 
-    console.log(`Imported ${Math.min(i + batchSize, rows.length)} / ${rows.length}`);
+function toNull(v: unknown) {
+  const s = toSafeString(v).trim();
+  return s === "" ? null : s;
+}
+
+function toInt(v: unknown) {
+  const s = toNull(v);
+  if (s === null) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+function toBool(v: unknown) {
+  const s = toNull(v);
+  if (s === null) return null;
+  const t = String(s).toLowerCase();
+  if (t === "true" || t === "1" || t === "yes") return true;
+  if (t === "false" || t === "0" || t === "no") return false;
+  return null;
+}
+
+function norm(v: unknown) {
+  return toSafeString(v).trim().toLowerCase();
+}
+
+function createEnumNormalizer<T extends string>(
+  allowed: readonly T[],
+  fallback: T
+): ValueNormalizer<T> {
+  const allowedSet = new Set(allowed);
+
+  return {
+    normalize: (value: unknown) => {
+      const normalized = norm(value);
+      return allowedSet.has(normalized as T) ? (normalized as T) : fallback;
+    },
+  };
+}
+
+function createOptionalEnumNormalizer<T extends string>(
+  allowed: readonly T[]
+): ValueNormalizer<T | null> {
+  return {
+    normalize: (value: unknown) => {
+      const nullable = toNull(value);
+      if (nullable === null) return null;
+      const normalized = norm(nullable);
+      return allowed.includes(normalized as T) ? (normalized as T) : null;
+    },
+  };
+}
+
+const defaultNormalizers: Normalizers = {
+  parsedArtistType: createEnumNormalizer(parsedArtistTypeValues, "unknown"),
+  gender: createEnumNormalizer(genderValues, "unknown"),
+  primaryGenre: createEnumNormalizer(genreValues, "other"),
+  secondaryGenre: createOptionalEnumNormalizer(genreValues),
+};
+
+function mapRowToArtist(row: CsvRow, normalizers: Normalizers): NewArtist {
+  return {
+    spotify_id: String(row.spotify_id),
+    scraper_name: String(row.scraper_name),
+    chartmasters_name: toNull(row.chartmasters_name),
+    scraper_image_url: toNull(row.scraper_image_url),
+    mb_id: String(row.mb_id),
+    mb_type_raw: String(row.mb_type_raw),
+    parsed_artist_type: normalizers.parsedArtistType.normalize(row.parsed_artist_type),
+    gender: normalizers.gender.normalize(row.gender),
+    country: String(row.country),
+    birth_date: toNull(row.birth_date),
+    death_date: toNull(row.death_date),
+    disband_date: toNull(row.disband_date),
+    debut_year: toInt(row.debut_year),
+    member_count: toInt(row.member_count),
+    genres: String(row.genres),
+    primary_genre: normalizers.primaryGenre.normalize(row.primary_genre),
+    secondary_genre: normalizers.secondaryGenre.normalize(row.secondary_genre),
+    is_dead: toBool(row.is_dead),
+    is_disbanded: toBool(row.is_disbanded),
+  };
+}
+
+async function importArtists(csvPath: string, deps: ImporterDependencies) {
+  const {
+    reader,
+    parser,
+    repository,
+    chunkSize = 1000,
+    normalizers = defaultNormalizers,
+  } = deps;
+  const raw = await reader.read(csvPath);
+  const rows = parser.parse(raw);
+
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize);
+    const values = chunk.map((row) => mapRowToArtist(row, normalizers));
+
+    await repository.upsertBatch(values);
+    console.log(`Imported ${Math.min(i + chunkSize, rows.length)} / ${rows.length}`);
   }
+}
+
+const csvPath = path.join(process.cwd(), "artist.csv");
+
+try {
+  await importArtists(csvPath, {
+    reader: nodeFileReader,
+    parser: csvSyncParser,
+    repository: drizzleArtistRepository,
+    chunkSize: 1000,
+  });
 
   console.log("Done.");
 } catch (e) {
