@@ -7,6 +7,27 @@ import { db } from "./db";
 import { artists, type NewArtist } from "../db/schema/artists";
 
 type CsvRow = Record<string, string>;
+type ParsedArtistType = NewArtist["parsed_artist_type"];
+type Gender = NewArtist["gender"];
+type Genre = NewArtist["primary_genre"];
+
+const parsedArtistTypes = new Set<ParsedArtistType>(["solo", "group", "unknown"]);
+const genderTypes = new Set<Gender>(["male", "female", "non-binary", "mixed", "unknown"]);
+const genreTypes = new Set<Genre>([
+  "afrobeats",
+  "alternative",
+  "country",
+  "electronic",
+  "hip hop",
+  "k-pop",
+  "latin",
+  "metal",
+  "other",
+  "pop",
+  "r&b",
+  "reggae",
+  "rock",
+]);
 
 function toNull(v: unknown) {
   if (v === undefined || v === null) return null;
@@ -34,17 +55,51 @@ function norm(v: unknown) {
   return String(v ?? "").trim().toLowerCase();
 }
 
-async function main() {
+function isParsedArtistType(value: string): value is ParsedArtistType {
+  return parsedArtistTypes.has(value as ParsedArtistType);
+}
+
+function isGender(value: string): value is Gender {
+  return genderTypes.has(value as Gender);
+}
+
+function isGenre(value: string): value is Genre {
+  return genreTypes.has(value as Genre);
+}
+
+function toParsedArtistType(v: unknown): ParsedArtistType {
+  const value = norm(v);
+  return isParsedArtistType(value) ? value : "unknown";
+}
+
+function toGender(v: unknown): Gender {
+  const value = norm(v);
+  return isGender(value) ? value : "unknown";
+}
+
+function toGenre(v: unknown): Genre {
+  const value = norm(v);
+  return isGenre(value) ? value : "other";
+}
+
+function toSecondaryGenre(v: unknown): NewArtist["secondary_genre"] {
+  const value = toNull(v);
+  if (value === null) return null;
+  const normalized = norm(value);
+  return isGenre(normalized) ? normalized : null;
+}
+
+const batchSize = 1000;
+
+try {
   const csvPath = path.join(process.cwd(), "artist.csv");
   const raw = fs.readFileSync(csvPath, "utf8");
 
-  const rows = parse(raw, {
+  const rows = parse<CsvRow>(raw, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
-  }) as CsvRow[];
-
-  const batchSize = 1000;
+  });
 
   for (let i = 0; i < rows.length; i += batchSize) {
     const chunk = rows.slice(i, i + batchSize);
@@ -57,9 +112,9 @@ async function main() {
 
       mb_id: String(r.mb_id),
       mb_type_raw: String(r.mb_type_raw),
-      parsed_artist_type: norm(r.parsed_artist_type) as NewArtist["parsed_artist_type"],
+      parsed_artist_type: toParsedArtistType(r.parsed_artist_type),
 
-      gender: norm(r.gender) as NewArtist["gender"],
+      gender: toGender(r.gender),
       country: String(r.country),
 
       birth_date: toNull(r.birth_date),
@@ -71,8 +126,8 @@ async function main() {
 
       genres: String(r.genres),
 
-      primary_genre: norm(r.primary_genre) as NewArtist["primary_genre"],
-      secondary_genre: toNull(r.secondary_genre) as NewArtist["secondary_genre"],
+      primary_genre: toGenre(r.primary_genre),
+      secondary_genre: toSecondaryGenre(r.secondary_genre),
 
       is_dead: toBool(r.is_dead),
       is_disbanded: toBool(r.is_disbanded),
@@ -109,9 +164,7 @@ async function main() {
   }
 
   console.log("Done.");
-}
-
-main().catch((e) => {
+} catch (e) {
   console.error(e);
   process.exit(1);
-});
+}
