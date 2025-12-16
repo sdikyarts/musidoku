@@ -1,3 +1,4 @@
+-- NOSONAR: PostgreSQL schema; VARCHAR2 rule (PLSQL) not applicable
 CREATE TYPE "public"."gender_enum" AS ENUM('male', 'female', 'non-binary', 'mixed', 'unknown');--> statement-breakpoint
 CREATE TYPE "public"."genre_enum" AS ENUM('afrobeats', 'alternative', 'country', 'electronic', 'hip hop', 'k-pop', 'latin', 'metal', 'other', 'pop', 'r&b', 'reggae', 'rock');--> statement-breakpoint
 CREATE TYPE "public"."parsed_artist_type_enum" AS ENUM('solo', 'group', 'unknown');--> statement-breakpoint
