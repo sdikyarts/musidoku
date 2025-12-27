@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <Navbar />
-        <div style={{ padding: "96px 224px 36px 224px" }}>{children}</div>
+        <div style={{ padding: "96px 96px 36px 96px" }}>{children}</div>
       </body>
     </html>
   );

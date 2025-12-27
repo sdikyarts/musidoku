@@ -1,5 +1,6 @@
 import React from 'react';
 import ArtistSearch from '../components/search/artist';
+import ArtistCard from '../components/cards/ArtistCard';
 
 export default function ArtistsPage() {
   return (
@@ -8,9 +9,10 @@ export default function ArtistsPage() {
         display: "flex",
         justifyContent: "center",
         width: "100%",
+        padding: "0 128px",
         flexDirection: "column",
         alignItems: "center",
-        gap: "10px"
+        gap: "36px"
       }}
     >
       <div 
@@ -82,7 +84,7 @@ export default function ArtistsPage() {
                   fontFamily: "Inter",
                   fontSize: "16px",
                   fontStyle: "normal",
-                  fontWeight: "600",
+                  fontWeight: "550",
                   lineHeight: "24px",
                   textAlign: "center"
                 }}
@@ -102,6 +104,33 @@ export default function ArtistsPage() {
           >
             <ArtistSearch />
           </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: "var(--Spacings-Gaps-36px, 36px)"
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            width: "100%",
+            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+            gap: "24px"
+          }}
+        >
+          <ArtistCard />
+          <ArtistCard />
+          <ArtistCard />
+          <ArtistCard />
+          <ArtistCard />
+          <ArtistCard />
+          <ArtistCard />
+          <ArtistCard />
+        </div>
       </div>
     </main>
   );
