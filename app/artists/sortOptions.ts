@@ -61,7 +61,7 @@ export function sortArtists<T extends SortableArtist>(
       sortedArtists.sort(compareNames);
       break;
     case "name-desc":
-      sortedArtists.sort((a, b) => compareNames(b, a));
+      sortedArtists.sort((a, b) => -compareNames(a, b));
       break;
     case "debut-asc":
       sortedArtists.sort((a, b) => {

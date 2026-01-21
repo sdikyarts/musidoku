@@ -17,8 +17,8 @@ export default function ResponsiveLayout({
     };
 
     updatePadding();
-    window.addEventListener('resize', updatePadding);
-    return () => window.removeEventListener('resize', updatePadding);
+    globalThis.window.addEventListener('resize', updatePadding);
+    return () => globalThis.window.removeEventListener('resize', updatePadding);
   }, []);
 
   return (
