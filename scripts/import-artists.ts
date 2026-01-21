@@ -1,6 +1,7 @@
 // scripts/import-artists.ts
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { parse } from "csv-parse/sync";
 import { sql } from "drizzle-orm";
 import { db } from "./db";
@@ -11,7 +12,7 @@ type ParsedArtistType = NewArtist["parsed_artist_type"];
 type Gender = NewArtist["gender"];
 type Genre = NewArtist["primary_genre"];
 
-type ValueNormalizer<T> = {
+export type ValueNormalizer<T> = {
   normalize: (value: unknown) => T;
 };
 
@@ -23,18 +24,18 @@ type CsvParser = {
   parse: (raw: string) => CsvRow[];
 };
 
-type ArtistRepository = {
+export type ArtistRepository = {
   upsertBatch: (values: NewArtist[]) => Promise<void>;
 };
 
-type Normalizers = {
+export type Normalizers = {
   parsedArtistType: ValueNormalizer<ParsedArtistType>;
   gender: ValueNormalizer<Gender>;
   primaryGenre: ValueNormalizer<Genre>;
   secondaryGenre: ValueNormalizer<NewArtist["secondary_genre"]>;
 };
 
-type ImporterDependencies = {
+export type ImporterDependencies = {
   reader: FileReader;
   parser: CsvParser;
   repository: ArtistRepository;
@@ -42,9 +43,9 @@ type ImporterDependencies = {
   normalizers?: Normalizers;
 };
 
-const parsedArtistTypeValues = ["solo", "group", "unknown"] as const;
-const genderValues = ["male", "female", "non-binary", "mixed", "unknown"] as const;
-const genreValues = [
+export const parsedArtistTypeValues = ["solo", "group", "unknown"] as const;
+export const genderValues = ["male", "female", "non-binary", "mixed", "unknown"] as const;
+export const genreValues = [
   "afrobeats",
   "alternative",
   "country",
@@ -60,7 +61,7 @@ const genreValues = [
   "rock",
 ] as const;
 
-function toSafeString(value: unknown): string {
+export function toSafeString(value: unknown): string {
   if (value === undefined || value === null) return "";
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
@@ -113,19 +114,19 @@ const drizzleArtistRepository: ArtistRepository = {
   },
 };
 
-function toNull(v: unknown) {
+export function toNull(v: unknown) {
   const s = toSafeString(v).trim();
   return s === "" ? null : s;
 }
 
-function toInt(v: unknown) {
+export function toInt(v: unknown) {
   const s = toNull(v);
   if (s === null) return null;
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 }
 
-function toBool(v: unknown) {
+export function toBool(v: unknown) {
   const s = toNull(v);
   if (s === null) return null;
   const t = String(s).toLowerCase();
@@ -134,11 +135,11 @@ function toBool(v: unknown) {
   return null;
 }
 
-function norm(v: unknown) {
+export function norm(v: unknown) {
   return toSafeString(v).trim().toLowerCase();
 }
 
-function createEnumNormalizer<T extends string>(
+export function createEnumNormalizer<T extends string>(
   allowed: readonly T[],
   fallback: T
 ): ValueNormalizer<T> {
@@ -152,7 +153,7 @@ function createEnumNormalizer<T extends string>(
   };
 }
 
-function createOptionalEnumNormalizer<T extends string>(
+export function createOptionalEnumNormalizer<T extends string>(
   allowed: readonly T[]
 ): ValueNormalizer<T | null> {
   return {
@@ -165,14 +166,14 @@ function createOptionalEnumNormalizer<T extends string>(
   };
 }
 
-const defaultNormalizers: Normalizers = {
+export const defaultNormalizers: Normalizers = {
   parsedArtistType: createEnumNormalizer(parsedArtistTypeValues, "unknown"),
   gender: createEnumNormalizer(genderValues, "unknown"),
   primaryGenre: createEnumNormalizer(genreValues, "other"),
   secondaryGenre: createOptionalEnumNormalizer(genreValues),
 };
 
-function mapRowToArtist(row: CsvRow, normalizers: Normalizers): NewArtist {
+export function mapRowToArtist(row: CsvRow, normalizers: Normalizers): NewArtist {
   return {
     spotify_id: String(row.spotify_id),
     scraper_name: String(row.scraper_name),
@@ -196,7 +197,7 @@ function mapRowToArtist(row: CsvRow, normalizers: Normalizers): NewArtist {
   };
 }
 
-async function importArtists(csvPath: string, deps: ImporterDependencies) {
+export async function importArtists(csvPath: string, deps: ImporterDependencies) {
   const {
     reader,
     parser,
@@ -218,16 +219,23 @@ async function importArtists(csvPath: string, deps: ImporterDependencies) {
 
 const csvPath = path.join(process.cwd(), "artist.csv");
 
-try {
-  await importArtists(csvPath, {
-    reader: nodeFileReader,
-    parser: csvSyncParser,
-    repository: drizzleArtistRepository,
-    chunkSize: 1000,
-  });
+const isDirectExecution =
+  typeof process !== "undefined" &&
+  process.argv?.[1] &&
+  pathToFileURL(process.argv[1]).href === import.meta.url;
 
-  console.log("Done.");
-} catch (e) {
-  console.error(e);
-  process.exit(1);
+if (isDirectExecution) {
+  try {
+    await importArtists(csvPath, {
+      reader: nodeFileReader,
+      parser: csvSyncParser,
+      repository: drizzleArtistRepository,
+      chunkSize: 1000,
+    });
+
+    console.log("Done.");
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 }
