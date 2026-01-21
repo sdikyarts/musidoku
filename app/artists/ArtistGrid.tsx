@@ -137,6 +137,7 @@ export function ArtistPagination({
 
 export function ArtistGrid({ artists, pageSize }: Readonly<{ artists: Artist[]; pageSize: number }>) {
   const searchParams = useSearchParams();
+  const [isMounted, setIsMounted] = useState(false);
   const [maxColumns, setMaxColumns] = useState(5);
   
   const filteredArtists = filterArtists(artists, searchParams.get("q"));
@@ -169,18 +170,26 @@ export function ArtistGrid({ artists, pageSize }: Readonly<{ artists: Artist[]; 
       const maxCardsPerRow = Math.max(2, Math.floor((availableWidth + gap) / (cardWidth + gap)));
       
       setMaxColumns(maxCardsPerRow);
+      
+      // Set mounted after initial calculations
+      if (!isMounted) {
+        setIsMounted(true);
+      }
     };
     
     calculateMaxColumns();
     globalThis.window.addEventListener('resize', calculateMaxColumns);
     return () => globalThis.window.removeEventListener('resize', calculateMaxColumns);
-  }, []);
+  }, [isMounted]);
+  
+  // Use default value during SSR/initial render
+  const actualMaxColumns = isMounted ? maxColumns : 5;
 
   return (
     <div 
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${maxColumns}, 200px)`,
+        gridTemplateColumns: `repeat(${actualMaxColumns}, 200px)`,
         gap: "24px",
         justifyContent: "center",
         width: "100%",
