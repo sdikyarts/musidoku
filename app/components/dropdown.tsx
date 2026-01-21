@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import SearchIcon from "./icons/SearchIcon";
 import ArrowDownIcon from "./icons/ArrowDown";
 
@@ -13,6 +13,7 @@ type DropdownProps = {
   iconSize?: number;
   arrowSize?: number;
   contentGap?: number | string;
+  alwaysShowLabel?: boolean; // When true, always show label regardless of screen size
   onMouseEnter?: React.MouseEventHandler<HTMLButtonElement>;
   onMouseLeave?: React.MouseEventHandler<HTMLButtonElement>;
   onFocus?: React.FocusEventHandler<HTMLButtonElement>;
@@ -29,45 +30,75 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
   iconSize,
   arrowSize,
   contentGap = 8,
+  alwaysShowLabel = false,
   onMouseEnter,
   onMouseLeave,
   onFocus,
   onBlur,
   onClick,
 }: Readonly<DropdownProps>, ref) {
+  const [screenWidth, setScreenWidth] = useState(
+    globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
+  );
+
+  useEffect(() => {
+    // If alwaysShowLabel is true, don't track screen width
+    if (alwaysShowLabel) {
+      return;
+    }
+
+    const checkScreenWidth = () => {
+      if (globalThis.window === undefined) return;
+      setScreenWidth(globalThis.window.innerWidth);
+    };
+    
+    checkScreenWidth();
+    globalThis.window.addEventListener('resize', checkScreenWidth);
+    return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+  }, [alwaysShowLabel]);
+
+  // Compute isNarrowScreen based on alwaysShowLabel and screenWidth
+  const isNarrowScreen = !alwaysShowLabel && screenWidth <= 959;
+
   const hasActiveFilters = false; // TODO: replace with real filter state when filters are implemented
   const resolvedTextColor = textColor ?? placeholderColor;
   const resolvedBackgroundColor =
     backgroundColor ?? "var(--Colors-Search-Bar-Fill, #C2D4ED)";
   const resolvedArrowColor = arrowColor ?? resolvedTextColor;
-  const resolvedIconSize = iconSize ?? 36;
-  const iconElement = (() => {
-    if (icon) {
-      if (React.isValidElement(icon)) {
-        const element = icon as React.ReactElement<{ color?: string; size?: number }>;
-        const iconProps = element.props;
-        const nextProps: { color?: string; size?: number } = {};
+  const getIconSize = () => {
+    if (iconSize !== undefined) return iconSize;
+    return isNarrowScreen ? 24 : 36;
+  };
 
-        if (!iconProps.color) {
-          nextProps.color = resolvedTextColor;
-        }
+  const cloneIconWithProps = (element: React.ReactElement<{ color?: string; size?: number }>) => {
+    const iconProps = element.props;
+    const nextProps: { color?: string; size?: number } = {};
 
-        if (iconProps.size === undefined) {
-          nextProps.size = resolvedIconSize;
-        }
-
-        return Object.keys(nextProps).length > 0
-          ? React.cloneElement(element, nextProps)
-          : element;
-      }
-      return icon;
+    if (!iconProps.color) {
+      nextProps.color = resolvedTextColor;
     }
-    return (
-      <SearchIcon
-        color={resolvedTextColor}
-        size={resolvedIconSize}
-      />
-    );
+
+    if (iconProps.size === undefined) {
+      nextProps.size = getIconSize();
+    } else if (iconSize !== undefined) {
+      nextProps.size = iconSize;
+    }
+
+    return Object.keys(nextProps).length > 0
+      ? React.cloneElement(element, nextProps)
+      : element;
+  };
+
+  const iconElement = (() => {
+    if (!icon) {
+      return <SearchIcon color={resolvedTextColor} size={getIconSize()} />;
+    }
+
+    if (React.isValidElement(icon)) {
+      return cloneIconWithProps(icon as React.ReactElement<{ color?: string; size?: number }>);
+    }
+
+    return icon;
   })();
 
   return (
@@ -82,12 +113,12 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
       onClick={onClick}
       style={{
         display: "flex",
-        width: "fit-content",
+        width: isNarrowScreen ? "44px" : "fit-content", // Fixed width for icon-only mode
         height: "44px",
         padding: "10px 16px",
         borderRadius: "6px",
         background: resolvedBackgroundColor,
-        justifyContent: "space-between",
+        justifyContent: isNarrowScreen ? "center" : "space-between", // Center icon when narrow
         gap: "8px",
         alignItems: "center",
         cursor: "pointer",
@@ -103,65 +134,69 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
           display: "flex",
           alignItems: "center",
           gap: contentGap,
-          width: "100%",
+          width: isNarrowScreen ? "auto" : "100%",
           alignContent: "center",
         }}
       >
         {iconElement}
-        <p
-          style={{
-            color: resolvedTextColor,
-            fontFamily: "Inter",
-            fontSize: "16px",
-            fontStyle: "normal",
-            fontWeight: "550",
-            lineHeight: "normal",
-            width: "100%",
-          }}
-        >
-          {label}
-        </p>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-        }}
-      >
-        {hasActiveFilters && (
-          <div
+        {!isNarrowScreen && (
+          <p
             style={{
-              alignItems: "center",
-              justifyContent: "center",
-              display: "flex",
-              gap: "2px",
+              color: resolvedTextColor,
+              fontFamily: "Inter",
+              fontSize: globalThis.window && globalThis.window.innerWidth <= 798 ? "15px" : "16px",
+              fontStyle: "normal",
+              fontWeight: "550",
+              lineHeight: "normal",
+              width: "100%",
             }}
           >
+            {label}
+          </p>
+        )}
+      </div>
+      {!isNarrowScreen && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          {hasActiveFilters && (
             <div
               style={{
-                backgroundColor: resolvedTextColor,
-                borderRadius: "14px",
                 alignItems: "center",
                 justifyContent: "center",
                 display: "flex",
-                padding: "1px 8px",
+                gap: "2px",
               }}
             >
-              <p
+              <div
                 style={{
-                  color: resolvedBackgroundColor,
-                  fontSize: "12px",
-                  fontWeight: "800",
+                  backgroundColor: resolvedTextColor,
+                  borderRadius: "14px",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  display: "flex",
+                  padding: "1px 8px",
                 }}
               >
-                0
-              </p>
+                <p
+                  style={{
+                    color: resolvedBackgroundColor,
+                    fontSize: "12px",
+                    fontWeight: "800",
+                  }}
+                >
+                  0
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-        <ArrowDownIcon color={resolvedArrowColor} size={arrowSize} />
-      </div>
+          )}
+          <ArrowDownIcon color={resolvedArrowColor} size={arrowSize} />
+        </div>
+      )}
     </button>
   );
 });

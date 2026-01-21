@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/navigation/navbar/navbar";
+import ResponsiveLayout from "./components/ResponsiveLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,32 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <Navbar />
-        <div style={{ padding: "96px 96px 36px 96px" }}>{children}</div>
-        <div 
-          style={{
-            display: "flex",
-            width: "1680px",
-            padding: "24px 144px 48px 144px",
-            background: "var(--Colors-Background-Background, #F3FDFB)",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "24px"
-          }}
-        >
-          <p
-            style={{
-              color: "var(--Colors-Text-Quarternary, #7F8D8B)",
-              fontFamily: "Inter",
-              fontSize: "16px",
-              fontStyle: "normal",
-              fontWeight: "550",
-              lineHeight: "normal",
-              textAlign: "center"
-            }}
-          >
-            made by: lorem ipsum
-          </p>
-        </div>
+        <ResponsiveLayout>{children}</ResponsiveLayout>
       </body>
     </html>
   );

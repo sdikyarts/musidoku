@@ -171,7 +171,7 @@ export default function ArtistSearch({ artists }: Readonly<Props>) {
           display: "flex",
           width: "100%",
           height: "44px",
-          minWidth: "360px",
+          minWidth: "200px", // Reduced from 360px to be more mobile-friendly
           padding: "10px 16px",
           borderRadius: "6px",
           background: "var(--Colors-Search-Bar-Fill, #C2D4ED)",
@@ -208,7 +208,7 @@ export default function ArtistSearch({ artists }: Readonly<Props>) {
             style={{
               color: textColor,
               fontFamily: "Inter",
-              fontSize: "16px",
+              fontSize: globalThis.window && globalThis.window.innerWidth <= 798 ? "15px" : "16px",
               fontStyle: "normal",
               fontWeight: 550,
               lineHeight: "normal",

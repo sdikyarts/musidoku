@@ -5,14 +5,14 @@ type ArtistCardProps = {
   imageUrl?: string | null;
 };
 
-export default function ArtistCard({ name, imageUrl }: ArtistCardProps) {
+export default function ArtistCard({ name, imageUrl }: Readonly<ArtistCardProps>) {
   const background = imageUrl ? `url(${imageUrl}) center / cover no-repeat` : "lightgray";
 
   return (
     <div
       style={{
         display: "flex",
-        width: "100%",
+        width: "200px",
         borderRadius: "6px",
         flexDirection: "column",
         alignItems: "flex-start",
@@ -21,11 +21,10 @@ export default function ArtistCard({ name, imageUrl }: ArtistCardProps) {
     >
       <div
         style={{
-          width: "100%",
-          height: "185px",
+          width: "200px",
+          aspectRatio: "1",
           background,
           flexShrink: "0",
-          aspectRatio: "329/185",
           borderRadius: "8px",
         }}
       />
@@ -35,7 +34,7 @@ export default function ArtistCard({ name, imageUrl }: ArtistCardProps) {
           borderRadius: "6px",
           justifyContent: "space-between",
           alignItems: "center",
-          alignSelf: "stretch",
+          width: "200px",
           gap: "8px",
         }}
       >

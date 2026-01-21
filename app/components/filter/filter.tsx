@@ -205,6 +205,7 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                             textColor="#051411"
                                             backgroundColor="#E5F4F8"
                                             label="Artist Type"
+                                            alwaysShowLabel={true}
                                             onClick={() => setIsTypeDropdownOpen((prev) => !prev)}
                                         />
                                         <div
@@ -230,6 +231,7 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                         textColor="#051411"
                                         backgroundColor="#E5F4F8"
                                         label="Country"
+                                        alwaysShowLabel={true}
                                     />
                                     <Dropdown 
                                         icon ={<MusicNoteIcon />}
@@ -237,6 +239,7 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                         textColor="#051411"
                                         backgroundColor="#E5F4F8"
                                         label="Genre"
+                                        alwaysShowLabel={true}
                                     />
                                 </div>
                             </div>
@@ -277,6 +280,7 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                     textColor="#051411"
                                     backgroundColor="#E5F4F8"
                                     label="Start Year"
+                                    alwaysShowLabel={true}
                                 />
                                 <p
                                     style={{
@@ -295,6 +299,7 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                     textColor="#051411"
                                     backgroundColor="#E5F4F8"
                                     label="End Year"
+                                    alwaysShowLabel={true}
                                 />
                             </div>
                         </div>
