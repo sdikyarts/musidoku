@@ -2,8 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
 import ArtistsPageClient from "./ArtistsPageClient";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Artists Roster",
+};
 
 type Artist = {
   id: string;
