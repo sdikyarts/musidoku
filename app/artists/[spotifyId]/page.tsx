@@ -1,6 +1,7 @@
 import { getArtistBySpotifyId } from "@/lib/artists/repo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import ArtistPageClient from "./ArtistPageClient";
 
 type Props = {
   params: Promise<{ spotifyId: string }>;
@@ -29,8 +30,5 @@ export default async function ArtistPage({ params }: Props) {
     notFound();
   }
 
-  return (
-    <div>
-    </div>
-  );
+  return <ArtistPageClient artist={artist} />;
 }
