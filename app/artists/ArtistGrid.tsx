@@ -192,7 +192,7 @@ export function ArtistGrid({ artists, pageSize }: Readonly<{ artists: Artist[]; 
       }}
     >
       {pageArtists.map((artist) => (
-        <ArtistCard key={artist.id} name={artist.name} imageUrl={artist.imageUrl} />
+        <ArtistCard key={artist.id} id={artist.id} name={artist.name} imageUrl={artist.imageUrl} />
       ))}
     </div>
   );
