@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 type Props = {
-  params: { spotifyId: string };
+  params: Promise<{ spotifyId: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const artist = await getArtistBySpotifyId(params.spotifyId);
+  const { spotifyId } = await params;
+  const artist = await getArtistBySpotifyId(spotifyId);
   
   if (!artist) {
     return {
@@ -21,7 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArtistPage({ params }: Props) {
-  const artist = await getArtistBySpotifyId(params.spotifyId);
+  const { spotifyId } = await params;
+  const artist = await getArtistBySpotifyId(spotifyId);
 
   if (!artist) {
     notFound();
@@ -29,7 +31,6 @@ export default async function ArtistPage({ params }: Props) {
 
   return (
     <div>
-      <h1>{artist.scraper_name}</h1>
     </div>
   );
 }
