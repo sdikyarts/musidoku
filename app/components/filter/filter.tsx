@@ -11,6 +11,7 @@ import MusicNoteIcon from "../icons/MusicNote";
 import SkullIcon from "../icons/Skull";
 import BrokenHeartIcon from "../icons/BrokenHeart";
 import type { ArtistTypeValue } from "../../artists/filter/typeOptions";
+import { calculateHorizontalPadding } from "@/lib/layout/padding";
 
 type Props = {
     visible: boolean;
@@ -33,6 +34,8 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
     const typeButtonRef = useRef<HTMLButtonElement | null>(null);
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState<ArtistTypeValue[]>([]);
+    const [isCenteredPopup, setIsCenteredPopup] = useState(false);
+    const [horizontalPadding, setHorizontalPadding] = useState(24);
 
     const handleToggleType = (type: ArtistTypeValue) => {
         setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((value) => value !== type) : [...prev, type]));
@@ -41,6 +44,19 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
     const closeTypeDropdown = () => {
         setIsTypeDropdownOpen(false);
     };
+
+    useEffect(() => {
+        const checkScreenWidth = () => {
+            if (globalThis.window === undefined) return;
+            const width = globalThis.window.innerWidth;
+            setIsCenteredPopup(width <= 959);
+            setHorizontalPadding(calculateHorizontalPadding(width));
+        };
+        
+        checkScreenWidth();
+        globalThis.window.addEventListener('resize', checkScreenWidth);
+        return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -61,29 +77,52 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
     }, [onClickOutside, triggerRef]);
 
     return (
-        <div
-            ref={containerRef}
-            style={{
-                position: "absolute",
-                top: "calc(100% + 8px)",
-                left: "auto",
-                right: 0,
-                width: "100%",
-                minWidth: "800px",
-                padding: "16px",
-                gap: "6px",
-                borderRadius: "6px",
-                boxShadow: "0 12px 24px rgba(0, 0, 0, 0.0875)",
-                background: "var(--Colors-Background-Secondary, #C2D4ED)",
-                display: "inline-flex",
-                flexDirection: "column",
-                listStyleType: "none",
-                margin: 0,
-                zIndex: 100,
-                boxSizing: "border-box",
-                overflowY: "auto",
-            }}
-        >
+        <>
+            {isCenteredPopup && (
+                <button
+                    type="button"
+                    aria-label="Close filter menu"
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.4)",
+                        zIndex: 9999,
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                    }}
+                    onClick={onClickOutside}
+                />
+            )}
+            <div
+                ref={containerRef}
+                style={{
+                    position: isCenteredPopup ? "fixed" : "absolute",
+                    top: isCenteredPopup ? "50%" : "calc(100% + 8px)",
+                    left: isCenteredPopup ? `${horizontalPadding}px` : "auto",
+                    right: isCenteredPopup ? `${horizontalPadding}px` : 0,
+                    transform: isCenteredPopup ? "translateY(-50%)" : "none",
+                    width: isCenteredPopup ? "auto" : "100%",
+                    minWidth: isCenteredPopup ? "452px" : "800px",
+                    maxWidth: isCenteredPopup ? "959px" : "none",
+                    maxHeight: isCenteredPopup ? "min(60vh, 600px)" : "none",
+                    padding: "16px",
+                    gap: "6px",
+                    borderRadius: "6px",
+                    boxShadow: "0 12px 24px rgba(0, 0, 0, 0.0875)",
+                    background: "var(--Colors-Background-Secondary, #C2D4ED)",
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    listStyleType: "none",
+                    margin: 0,
+                    zIndex: 10000,
+                    boxSizing: "border-box",
+                    overflowY: "auto",
+                }}
+            >
             <div
                 style={{
                     display: "flex",
@@ -353,5 +392,6 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                 </div>
             </div>
         </div>
+        </>
     );
 }
