@@ -20,4 +20,6 @@ jobs:
             - name: Run lint
               run: npm run lint
             - name: Run tests
+              env:
+                DATABASE_URL: ${{ secrets.DATABASE_URL }}
               run: npm run test

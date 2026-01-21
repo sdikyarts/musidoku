@@ -1,0 +1,62 @@
+import fs from "node:fs";
+import path from "node:path";
+import { parse } from "csv-parse/sync";
+import ArtistsPageClient from "./ArtistsPageClient";
+
+export const dynamic = "force-dynamic";
+
+type Artist = {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  debutYear?: number | null;
+};
+
+type CsvRow = {
+  spotify_id: string;
+  scraper_name: string;
+  scraper_image_url?: string;
+  chartmasters_name?: string;
+  debut_year?: string;
+};
+
+function loadArtists(): Artist[] {
+  const csvPath = path.join(process.cwd(), "artist.csv");
+  const raw = fs.readFileSync(csvPath, "utf8");
+  const rows = parse<CsvRow>(raw, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  });
+
+  return rows.map((row) => ({
+    id: row.spotify_id,
+    name: row.scraper_name,
+    imageUrl: row.scraper_image_url ?? null,
+    debutYear:
+      row.debut_year && Number.isFinite(Number(row.debut_year))
+        ? Number(row.debut_year)
+        : null,
+  }));
+}
+
+export default function ArtistsPage() {
+  const artists = loadArtists();
+
+  return (
+    <main
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        width: "100%",
+        paddingLeft: "128px",
+        paddingRight: "128px",
+        paddingTop: "269px",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <ArtistsPageClient artists={artists} />
+    </main>
+  );
+}
