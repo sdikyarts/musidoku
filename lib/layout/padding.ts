@@ -1,5 +1,5 @@
 export function calculateHorizontalPadding(screenWidth?: number): number {
-  if (typeof globalThis.window === 'undefined' && !screenWidth) return 224; // Default for SSR
+  if (globalThis.window === undefined && !screenWidth) return 224; // Default for SSR
   
   const width = screenWidth ?? globalThis.window.innerWidth;
   
@@ -19,7 +19,7 @@ export function calculateHorizontalPadding(screenWidth?: number): number {
 }
 
 export function calculateNavbarHorizontalPadding(screenWidth?: number): number {
-  if (typeof globalThis.window === 'undefined' && !screenWidth) return 96; // Default for SSR
+  if (globalThis.window === undefined && !screenWidth) return 96; // Default for SSR
   
   const width = screenWidth ?? globalThis.window.innerWidth;
   
