@@ -45,10 +45,9 @@ function calculatePageSize() {
 }
 
 export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artist[] }>) {
-  const [isMounted, setIsMounted] = useState(false);
-  const [pageSize, setPageSize] = useState(24);
-  const [padding, setPadding] = useState(224);
-  const [screenWidth, setScreenWidth] = useState(1280);
+  const [pageSize, setPageSize] = useState<number | null>(null);
+  const [padding, setPadding] = useState<number | null>(null);
+  const [screenWidth, setScreenWidth] = useState<number | null>(null);
 
   useEffect(() => {
     const updatePageSizeAndPadding = () => {
@@ -61,39 +60,34 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
       if (globalThis.window !== undefined) {
         setScreenWidth(globalThis.window.innerWidth);
       }
-      
-      // Set mounted after initial calculations
-      if (!isMounted) {
-        setIsMounted(true);
-      }
     };
     
     updatePageSizeAndPadding();
     globalThis.window.addEventListener('resize', updatePageSizeAndPadding);
     return () => globalThis.window.removeEventListener('resize', updatePageSizeAndPadding);
-  }, [isMounted]);
+  }, []);
   
-  // Use default values during SSR/initial render to prevent layout shift
-  const actualPadding = isMounted ? padding : 224;
-  const actualPageSize = isMounted ? pageSize : 24;
-  const actualScreenWidth = isMounted ? screenWidth : 1280;
-
+  // Don't render until we have calculated values
+  if (pageSize === null || padding === null || screenWidth === null) {
+    return null;
+  }
+  
   // Responsive title styling - keep single line with better font sizes
   const getTitleFontSize = () => {
-    if (actualScreenWidth >= 1280) return "42px";
-    if (actualScreenWidth >= 960) return "38px"; 
-    if (actualScreenWidth >= 777) return "34px";
+    if (screenWidth >= 1280) return "42px";
+    if (screenWidth >= 960) return "38px"; 
+    if (screenWidth >= 777) return "34px";
     return "34px"; // Same as 777px+ for narrower screens
   };
   
   const titleFontSize = getTitleFontSize();
-  const titleGap = actualScreenWidth >= 777 ? "10px" : "6px";
+  const titleGap = screenWidth >= 777 ? "10px" : "6px";
   
   // Responsive container width - wider to prevent text wrapping
   const getTitleContainerWidth = () => {
-    if (actualScreenWidth >= 1280) return "70%"; // Wider to prevent wrapping at 1280px
-    if (actualScreenWidth >= 960) return "85%";  // Wider for medium screens
-    if (actualScreenWidth >= 640) return "90%";
+    if (screenWidth >= 1280) return "70%"; // Wider to prevent wrapping at 1280px
+    if (screenWidth >= 960) return "85%";  // Wider for medium screens
+    if (screenWidth >= 640) return "90%";
     return "95%"; // Almost full width on very narrow screens
   };
   
@@ -101,12 +95,12 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
   
   // Responsive font sizes for body text (slightly smaller on narrow screens)
   const getBodyFontSize = () => {
-    if (actualScreenWidth > 798) return "16px";
+    if (screenWidth > 798) return "16px";
     return "15px"; // Slightly smaller for 798px and below
   };
   
   const getBodyLineHeight = () => {
-    if (actualScreenWidth > 798) return "24px";
+    if (screenWidth > 798) return "24px";
     return "22px"; // Proportionally smaller line height
   };
   
@@ -115,27 +109,27 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
   
   // Simple spacing based on your exact specifications
   const getGridTopSpacing = () => {
-    if (actualScreenWidth <=720) {
+    if (screenWidth <=720) {
       return "8px";
     }
 
     // 721px - 798px: 8px spacing
-    if (actualScreenWidth >= 721 && actualScreenWidth <= 798) {
+    if (screenWidth >= 721 && screenWidth <= 798) {
       return "-14px";
     }
     
     // 799px - 959px: 24px spacing
-    if (actualScreenWidth >= 799 && actualScreenWidth < 960) {
+    if (screenWidth >= 799 && screenWidth < 960) {
       return "-10px";
     }
     
     // 960px - 1279px: two-liner, 16px spacing
-    if (actualScreenWidth >= 960 && actualScreenWidth < 1280) {
+    if (screenWidth >= 960 && screenWidth < 1280) {
       return "-5px";
     }
     
     // 1280px - 1572px: three-liner, 32px spacing
-    if (actualScreenWidth >= 1280 && actualScreenWidth < 1303) {
+    if (screenWidth >= 1280 && screenWidth < 1303) {
       return "24px";
     }
     
@@ -154,8 +148,8 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
           alignItems: "center",
           gap: "24px",
           paddingTop: "96px",
-          paddingLeft: `${actualPadding}px`,
-          paddingRight: `${actualPadding}px`,
+          paddingLeft: `${padding}px`,
+          paddingRight: `${padding}px`,
           alignSelf: "stretch",
           backgroundColor: "var(--Colors-Background-Secondary, #F3FDFB)",
           position: "fixed",
@@ -251,7 +245,7 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
               justifyContent: "center",
               alignItems: "center",
               gap: "5px",
-              maxWidth: actualScreenWidth >= 1303 ? "598.5px" : "100%",
+              maxWidth: screenWidth >= 1303 ? "598.5px" : "100%",
             }}
           >
             <p
@@ -282,7 +276,7 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
           }}
         >
           <ArtistSearch artists={artists} />
-          <PaginationBar artists={artists} pageSize={actualPageSize} />
+          <PaginationBar artists={artists} pageSize={pageSize} />
         </div>
         </div>
       </div>
@@ -293,13 +287,13 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
           flexDirection: "column",
           alignItems: "center",
           gap: "24px",
-          paddingLeft: `${actualPadding}px`,
-          paddingRight: `${actualPadding}px`,
+          paddingLeft: `${padding}px`,
+          paddingRight: `${padding}px`,
           marginTop: gridTopSpacing,
           boxSizing: "border-box",
         }}
       >
-        <ArtistGrid artists={artists} pageSize={actualPageSize} />
+        <ArtistGrid artists={artists} pageSize={pageSize} />
       </div>
     </>
   );
