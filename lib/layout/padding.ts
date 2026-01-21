@@ -1,7 +1,7 @@
 export function calculateHorizontalPadding(screenWidth?: number): number {
-  if (typeof window === 'undefined' && !screenWidth) return 224; // Default for SSR
+  if (typeof globalThis.window === 'undefined' && !screenWidth) return 224; // Default for SSR
   
-  const width = screenWidth ?? window.innerWidth;
+  const width = screenWidth ?? globalThis.window.innerWidth;
   
   if (width >= 1440) {
     return 288;
@@ -19,9 +19,9 @@ export function calculateHorizontalPadding(screenWidth?: number): number {
 }
 
 export function calculateNavbarHorizontalPadding(screenWidth?: number): number {
-  if (typeof window === 'undefined' && !screenWidth) return 96; // Default for SSR
+  if (typeof globalThis.window === 'undefined' && !screenWidth) return 96; // Default for SSR
   
-  const width = screenWidth ?? window.innerWidth;
+  const width = screenWidth ?? globalThis.window.innerWidth;
   
   // For 1096px and wider, keep current navbar padding (96px)
   if (width >= 1096) {
