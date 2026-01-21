@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import HoverableListItem from "../shared/HoverableListItem";
+import HoverableListItem from "../../shared/HoverableListItem";
 
 type Props = {
   name: string;
