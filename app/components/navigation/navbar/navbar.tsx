@@ -83,7 +83,16 @@ const Navbar: React.FC = () => {
             {isMobile && isMobileMenuOpen && (
                 <>
                     <div
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setIsMobileMenuOpen(false)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setIsMobileMenuOpen(false);
+                            }
+                        }}
+                        aria-label="Close menu"
                         style={{
                             position: "fixed",
                             top: 0,
@@ -92,6 +101,7 @@ const Navbar: React.FC = () => {
                             bottom: 0,
                             background: "rgba(0, 0, 0, 0.5)",
                             zIndex: 99,
+                            cursor: "pointer",
                         }}
                     />
                     <div
