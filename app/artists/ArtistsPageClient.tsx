@@ -11,6 +11,7 @@ export type Artist = {
   name: string;
   imageUrl?: string | null;
   debutYear?: number | null;
+  type?: 'solo' | 'group' | 'unknown' | null;
 };
 
 function calculatePageSize() {
@@ -48,6 +49,7 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
   const [pageSize, setPageSize] = useState<number | null>(null);
   const [padding, setPadding] = useState<number | null>(null);
   const [screenWidth, setScreenWidth] = useState<number | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<Array<'solo' | 'group'>>([]);
 
   useEffect(() => {
     const updatePageSizeAndPadding = () => {
@@ -275,8 +277,8 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
             boxSizing: "border-box",
           }}
         >
-          <ArtistSearch artists={artists} />
-          <PaginationBar artists={artists} pageSize={pageSize} />
+          <ArtistSearch artists={artists} selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} />
+          <PaginationBar artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} />
         </div>
         </div>
       </div>
@@ -293,7 +295,7 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
           boxSizing: "border-box",
         }}
       >
-        <ArtistGrid artists={artists} pageSize={pageSize} />
+        <ArtistGrid artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} />
       </div>
     </>
   );

@@ -126,7 +126,7 @@ const CategoryButton = React.forwardRef<HTMLButtonElement, CategoryButtonProps>(
                         gap: "12px",
                     }}
                 >
-                    <CloseSmallIcon className="close-icon" />
+                    <CloseSmallIcon color={resolvedTextColor} className="close-icon" />
                 </div>
             )}
         </button>

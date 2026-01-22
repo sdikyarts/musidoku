@@ -15,6 +15,7 @@ type Artist = {
   name: string;
   imageUrl?: string | null;
   debutYear?: number | null;
+  type?: 'solo' | 'group' | 'unknown' | null;
 };
 
 type CsvRow = {
@@ -23,6 +24,7 @@ type CsvRow = {
   scraper_image_url?: string;
   chartmasters_name?: string;
   debut_year?: string;
+  parsed_artist_type?: string;
 };
 
 function loadArtists(): Artist[] {
@@ -42,6 +44,9 @@ function loadArtists(): Artist[] {
       row.debut_year && Number.isFinite(Number(row.debut_year))
         ? Number(row.debut_year)
         : null,
+    type: (row.parsed_artist_type === 'solo' || row.parsed_artist_type === 'group' || row.parsed_artist_type === 'unknown')
+      ? row.parsed_artist_type
+      : null,
   }));
 }
 

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Dropdown from "../dropdown";
 import FilterArtistType from "./types";
 import PersonIcon from "../icons/Person";
+import GroupIcon from "../icons/Group";
 import CategoryButton from "./category";
 import CalendarClock from "../icons/CalendarClock";
 import GlobeIcon from "../icons/Globe";
@@ -11,34 +12,44 @@ import MusicNoteIcon from "../icons/MusicNote";
 import SkullIcon from "../icons/Skull";
 import BrokenHeartIcon from "../icons/BrokenHeart";
 import type { ArtistTypeValue } from "../../artists/filter/typeOptions";
+import { typeValueToLabel } from "../../artists/filter/typeOptions";
 import { calculateHorizontalPadding } from "@/lib/layout/padding";
 
 type Props = {
     visible: boolean;
     onClickOutside?: () => void;
     triggerRef?: React.RefObject<HTMLElement | null>;
+    selectedTypes?: ArtistTypeValue[];
+    onTypesChange?: (types: ArtistTypeValue[]) => void;
 };
 
 type FilterArtistContentProps = Omit<Props, "visible">;
 
-export default function FilterArtist({ visible, onClickOutside, triggerRef }: Readonly<Props>) {
+export default function FilterArtist({ visible, onClickOutside, triggerRef, selectedTypes = [], onTypesChange }: Readonly<Props>) {
     if (!visible) {
         return null;
     }
 
-    return <FilterArtistContent onClickOutside={onClickOutside} triggerRef={triggerRef} />;
+    return <FilterArtistContent onClickOutside={onClickOutside} triggerRef={triggerRef} selectedTypes={selectedTypes} onTypesChange={onTypesChange} />;
 }
 
-function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArtistContentProps>) {
+function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], onTypesChange }: Readonly<FilterArtistContentProps>) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const typeButtonRef = useRef<HTMLButtonElement | null>(null);
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
-    const [selectedTypes, setSelectedTypes] = useState<ArtistTypeValue[]>([]);
     const [isCenteredPopup, setIsCenteredPopup] = useState(false);
     const [horizontalPadding, setHorizontalPadding] = useState(24);
 
     const handleToggleType = (type: ArtistTypeValue) => {
-        setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((value) => value !== type) : [...prev, type]));
+        const newTypes = selectedTypes.includes(type) 
+            ? selectedTypes.filter((value) => value !== type) 
+            : [...selectedTypes, type];
+        onTypesChange?.(newTypes);
+    };
+
+    const handleRemoveType = (type: ArtistTypeValue) => {
+        const newTypes = selectedTypes.filter((value) => value !== type);
+        onTypesChange?.(newTypes);
     };
 
     const closeTypeDropdown = () => {
@@ -173,6 +184,17 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                 flexWrap: "wrap",
                             }}
                         >
+                            {selectedTypes.map((type) => (
+                                <CategoryButton
+                                    key={type}
+                                    label={typeValueToLabel[type]}
+                                    textColor="#F3FDFB"
+                                    backgroundColor="#6D7FD9"
+                                    icon={type === 'solo' ? <PersonIcon color="#F3FDFB" /> : <GroupIcon color="#F3FDFB" />}
+                                    showCloseIcon={true}
+                                    onClick={() => handleRemoveType(type)}
+                                />
+                            ))}
                         </div>
                     </div>
                     <div
@@ -239,10 +261,10 @@ function FilterArtistContent({ onClickOutside, triggerRef }: Readonly<FilterArti
                                     >
                                         <Dropdown 
                                             ref={typeButtonRef}
-                                            icon ={<PersonIcon />}
+                                            icon={selectedTypes.length > 0 ? <PersonIcon color="#F3FDFB" /> : <PersonIcon />}
                                             iconSize={60}
-                                            textColor="#051411"
-                                            backgroundColor="#E5F4F8"
+                                            textColor={selectedTypes.length > 0 ? "#F3FDFB" : "#051411"}
+                                            backgroundColor={selectedTypes.length > 0 ? "#6D7FD9" : "#E5F4F8"}
                                             label="Artist Type"
                                             alwaysShowLabel={true}
                                             onClick={() => setIsTypeDropdownOpen((prev) => !prev)}

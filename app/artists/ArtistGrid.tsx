@@ -12,6 +12,7 @@ export type Artist = {
   name: string;
   imageUrl?: string | null;
   debutYear?: number | null;
+  type?: 'solo' | 'group' | 'unknown' | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -37,13 +38,26 @@ function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: 
 export function filterArtists(
   artists: Artist[],
   queryParam: string | null,
+  selectedTypes?: Array<'solo' | 'group'>,
 ): Artist[] {
+  let filtered = artists;
+  
+  // Filter by search query
   const query = (queryParam ?? "").trim().toLowerCase();
-  if (!query) return artists;
-
-  return artists.filter((artist) =>
-    artist.name.toLowerCase().includes(query),
-  );
+  if (query) {
+    filtered = filtered.filter((artist) =>
+      artist.name.toLowerCase().includes(query),
+    );
+  }
+  
+  // Filter by artist type
+  if (selectedTypes && selectedTypes.length > 0) {
+    filtered = filtered.filter((artist) => 
+      artist.type && selectedTypes.includes(artist.type as 'solo' | 'group')
+    );
+  }
+  
+  return filtered;
 }
 
 export function ArtistPagination({
@@ -135,11 +149,11 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize }: Readonly<{ artists: Artist[]; pageSize: number }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'> }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
   
-  const filteredArtists = filterArtists(artists, searchParams.get("q"));
+  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
   const { startIndex } = getPageInfo(
     sortedArtists.length,
