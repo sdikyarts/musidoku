@@ -27,7 +27,7 @@ type Artist = {
   is_disbanded: boolean | null;
 };
 
-export default function ArtistPageClient({ artist }: { artist: Artist }) {
+export default function ArtistPageClient({ artist }: Readonly<{ artist: Artist }>) {
     const [titleFontSize, setTitleFontSize] = useState("64px");
     const [countryDisplay] = useState(() => getCountryDisplay(artist.country));
     
