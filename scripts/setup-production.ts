@@ -4,12 +4,13 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import path from "node:path";
-import { importArtists } from "./import-artists";
+import { 
+  importArtists, 
+  nodeFileReader, 
+  csvSyncParser, 
+  createDrizzleRepository 
+} from "./import-artists";
 import fs from "node:fs";
-import { parse } from "csv-parse/sync";
-import { db as defaultDb } from "./db";
-import { artists, type NewArtist } from "../db/schema/artists";
-import { sql } from "drizzle-orm";
 
 async function setupProduction() {
   // Check if production URL is provided
@@ -50,55 +51,10 @@ async function setupProduction() {
   }
 
   try {
-    const nodeFileReader = {
-      read: (filePath: string) => fs.promises.readFile(filePath, "utf8"),
-    };
-
-    const csvSyncParser = {
-      parse: (raw: string) =>
-        parse(raw, {
-          columns: true,
-          skip_empty_lines: true,
-          trim: true,
-        }) as Record<string, string>[],
-    };
-
-    const productionRepository = {
-      upsertBatch: async (values: NewArtist[]) => {
-        await db
-          .insert(artists)
-          .values(values)
-          .onConflictDoUpdate({
-            target: artists.spotify_id,
-            set: {
-              scraper_name: sql`excluded.scraper_name`,
-              chartmasters_name: sql`excluded.chartmasters_name`,
-              scraper_image_url: sql`excluded.scraper_image_url`,
-              mb_id: sql`excluded.mb_id`,
-              mb_type_raw: sql`excluded.mb_type_raw`,
-              parsed_artist_type: sql`excluded.parsed_artist_type`,
-              gender: sql`excluded.gender`,
-              country: sql`excluded.country`,
-              birth_date: sql`excluded.birth_date`,
-              death_date: sql`excluded.death_date`,
-              disband_date: sql`excluded.disband_date`,
-              debut_year: sql`excluded.debut_year`,
-              member_count: sql`excluded.member_count`,
-              genres: sql`excluded.genres`,
-              primary_genre: sql`excluded.primary_genre`,
-              secondary_genre: sql`excluded.secondary_genre`,
-              is_dead: sql`excluded.is_dead`,
-              is_disbanded: sql`excluded.is_disbanded`,
-              roster_order: sql`excluded.roster_order`,
-            },
-          });
-      },
-    };
-
     await importArtists(csvPath, {
       reader: nodeFileReader,
       parser: csvSyncParser,
-      repository: productionRepository,
+      repository: createDrizzleRepository(db),
       chunkSize: 1000,
     });
 
