@@ -1,5 +1,4 @@
 // scripts/setup-production.ts
-import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
@@ -11,6 +10,7 @@ import {
   createDrizzleRepository 
 } from "./import-artists";
 import fs from "node:fs";
+import * as schema from "../db/schema/artists";
 
 async function setupProduction() {
   // Check if production URL is provided
@@ -27,7 +27,7 @@ async function setupProduction() {
   console.log("🚀 Setting up production database...\n");
 
   const migrationClient = postgres(productionUrl, { max: 1, ssl: "require" });
-  const db = drizzle(migrationClient);
+  const db = drizzle(migrationClient, { schema });
 
   // Step 1: Run migrations
   console.log("📦 Step 1: Running migrations...");
@@ -69,7 +69,4 @@ async function setupProduction() {
   console.log("🎉 Production database setup complete!");
 }
 
-setupProduction().catch((err) => {
-  console.error("❌ Setup failed:", err);
-  process.exit(1);
-});
+await setupProduction();
