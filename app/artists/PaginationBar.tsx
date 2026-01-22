@@ -8,16 +8,18 @@ import { ArtistPagination, filterArtists } from "./ArtistGrid";
 type Props = {
   artists: Artist[];
   pageSize: number;
+  selectedTypes?: Array<'solo' | 'group'>;
+  selectedMisc?: Array<'deceased' | 'disbanded'>;
 };
 
 // Hides the pagination when scrolling down and reveals it when scrolling up
-export default function PaginationBar({ artists, pageSize }: Readonly<Props>) {
+export default function PaginationBar({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<Props>) {
   const [hidden, setHidden] = useState(false);
   const lastYRef = useRef<number>(0);
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickingRef = useRef<boolean>(false);
   const searchParams = useSearchParams();
-  const filteredTotal = filterArtists(artists, searchParams.get("q")).length;
+  const filteredTotal = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc).length;
 
   const clearIdleTimeout = useCallback(() => {
     if (idleTimeoutRef.current) {
