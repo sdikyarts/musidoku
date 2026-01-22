@@ -8,6 +8,13 @@
       "when": 1765784755771,
       "tag": "0000_artists_schema_update",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769072634817,
+      "tag": "0001_harsh_the_leader",
+      "breakpoints": true
     }
   ]
 }

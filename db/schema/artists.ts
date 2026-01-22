@@ -80,6 +80,9 @@ export const artists = pgTable('artists', {
   // added from CSV (nullable because your CSV has blanks)
   is_dead: boolean('is_dead'),
   is_disbanded: boolean('is_disbanded'),
+  
+  // roster order to maintain CSV order
+  roster_order: integer('roster_order'),
 });
 
 // Type helpers

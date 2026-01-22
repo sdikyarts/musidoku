@@ -2,7 +2,7 @@
 import { artists } from "@/db/schema/artists";
 import { ArtistQuery, DEFAULT_ARTIST_LIMIT, MAX_ARTIST_LIMIT } from "@/lib/artists/artist";
 import { db } from "@/lib/db";
-import { eq, ilike } from "drizzle-orm";
+import { asc, eq, ilike } from "drizzle-orm";
 
 function normalizeLimit(limit: number) {
   if (!Number.isInteger(limit) || limit < 1) return DEFAULT_ARTIST_LIMIT;
@@ -19,7 +19,13 @@ export async function listArtists({ query, limit, offset }: ArtistQuery) {
   const normalizedOffset = normalizeOffset(offset);
   const where = query ? ilike(artists.scraper_name, `%${query}%`) : undefined;
 
-  return db.select().from(artists).where(where).limit(normalizedLimit).offset(normalizedOffset);
+  return db
+    .select()
+    .from(artists)
+    .where(where)
+    .orderBy(asc(artists.roster_order))
+    .limit(normalizedLimit)
+    .offset(normalizedOffset);
 }
 
 export async function getArtistBySpotifyId(spotifyId: string) {
