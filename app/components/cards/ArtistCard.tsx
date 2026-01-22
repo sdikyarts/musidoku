@@ -1,15 +1,18 @@
+import Link from "next/link";
 import VerifiedIcon from "../icons/VerifiedIcon";
 
 type ArtistCardProps = {
+  id: string;
   name: string;
   imageUrl?: string | null;
 };
 
-export default function ArtistCard({ name, imageUrl }: Readonly<ArtistCardProps>) {
+export default function ArtistCard({ id, name, imageUrl }: Readonly<ArtistCardProps>) {
   const background = imageUrl ? `url(${imageUrl}) center / cover no-repeat` : "lightgray";
 
   return (
-    <div
+    <Link
+      href={`/artists/${id}`}
       style={{
         display: "flex",
         width: "200px",
@@ -17,6 +20,8 @@ export default function ArtistCard({ name, imageUrl }: Readonly<ArtistCardProps>
         flexDirection: "column",
         alignItems: "flex-start",
         gap: "12px",
+        textDecoration: "none",
+        cursor: "pointer",
       }}
     >
       <div
@@ -54,6 +59,6 @@ export default function ArtistCard({ name, imageUrl }: Readonly<ArtistCardProps>
         </p>
         <VerifiedIcon />
       </div>
-    </div>
+    </Link>
   );
 }
