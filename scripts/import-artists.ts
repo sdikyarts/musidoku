@@ -229,19 +229,17 @@ const isDirectExecution =
   pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (isDirectExecution) {
-  (async () => {
-    try {
-      await importArtists(csvPath, {
-        reader: nodeFileReader,
-        parser: csvSyncParser,
-        repository: drizzleArtistRepository,
-        chunkSize: 1000,
-      });
+  try {
+    await importArtists(csvPath, {
+      reader: nodeFileReader,
+      parser: csvSyncParser,
+      repository: drizzleArtistRepository,
+      chunkSize: 1000,
+    });
 
-      console.log("Done.");
-    } catch (e) {
-      console.error(e);
-      process.exit(1);
-    }
-  })();
+    console.log("Done.");
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 }
