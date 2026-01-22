@@ -1,8 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
-import { parse } from "csv-parse/sync";
 import ArtistsPageClient from "./ArtistsPageClient";
 import type { Metadata } from "next";
+import { listArtists } from "@/lib/artists/repo";
 
 export const dynamic = "force-dynamic";
 
@@ -10,54 +8,20 @@ export const metadata: Metadata = {
   title: "Artists Roster",
 };
 
-type Artist = {
-  id: string;
-  name: string;
-  imageUrl?: string | null;
-  debutYear?: number | null;
-  type?: 'solo' | 'group' | 'unknown' | null;
-  isDead?: boolean | null;
-  isDisbanded?: boolean | null;
-};
-
-type CsvRow = {
-  spotify_id: string;
-  scraper_name: string;
-  scraper_image_url?: string;
-  chartmasters_name?: string;
-  debut_year?: string;
-  parsed_artist_type?: string;
-  is_dead?: string;
-  is_disbanded?: string;
-};
-
-function loadArtists(): Artist[] {
-  const csvPath = path.join(process.cwd(), "artist.csv");
-  const raw = fs.readFileSync(csvPath, "utf8");
-  const rows = parse<CsvRow>(raw, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
-  });
-
-  return rows.map((row) => ({
-    id: row.spotify_id,
-    name: row.scraper_name,
-    imageUrl: row.scraper_image_url ?? null,
-    debutYear:
-      row.debut_year && Number.isFinite(Number(row.debut_year))
-        ? Number(row.debut_year)
-        : null,
-    type: (row.parsed_artist_type === 'solo' || row.parsed_artist_type === 'group' || row.parsed_artist_type === 'unknown')
-      ? row.parsed_artist_type
-      : null,
-    isDead: row.is_dead?.trim().toUpperCase() === 'TRUE',
-    isDisbanded: row.is_disbanded?.trim().toUpperCase() === 'TRUE',
+export default async function ArtistsPage() {
+  // Fetch all artists from database (you may want to add pagination here)
+  const dbArtists = await listArtists({ limit: 10000, offset: 0 });
+  
+  // Map database artists to the format expected by the client component
+  const artists = dbArtists.map((artist) => ({
+    id: artist.spotify_id,
+    name: artist.scraper_name,
+    imageUrl: artist.scraper_image_url ?? null,
+    debutYear: artist.debut_year ?? null,
+    type: artist.parsed_artist_type as 'solo' | 'group' | 'unknown' | null,
+    isDead: artist.is_dead ?? false,
+    isDisbanded: artist.is_disbanded ?? false,
   }));
-}
-
-export default function ArtistsPage() {
-  const artists = loadArtists();
 
   return (
     <main

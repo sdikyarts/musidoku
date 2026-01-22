@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:import": "tsx scripts/import-artists.ts"
   },
   "dependencies": {
     "@andreasnicolaou/country-kit": "^2.1.0",
