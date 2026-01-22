@@ -2,6 +2,7 @@
   "name": "musidoku",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +10,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:import": "tsx scripts/import-artists.ts"
+    "db:import": "tsx scripts/import-artists.ts",
+    "db:setup-production": "tsx scripts/setup-production.ts"
   },
   "dependencies": {
     "@andreasnicolaou/country-kit": "^2.1.0",
