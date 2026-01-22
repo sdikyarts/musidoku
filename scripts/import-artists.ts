@@ -109,6 +109,7 @@ const drizzleArtistRepository: ArtistRepository = {
           secondary_genre: sql`excluded.secondary_genre`,
           is_dead: sql`excluded.is_dead`,
           is_disbanded: sql`excluded.is_disbanded`,
+          roster_order: sql`excluded.roster_order`,
         },
       });
   },
@@ -210,7 +211,10 @@ export async function importArtists(csvPath: string, deps: ImporterDependencies)
 
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
-    const values = chunk.map((row) => mapRowToArtist(row, normalizers));
+    const values = chunk.map((row, index) => ({
+      ...mapRowToArtist(row, normalizers),
+      roster_order: i + index,
+    }));
 
     await repository.upsertBatch(values);
     console.log(`Imported ${Math.min(i + chunkSize, rows.length)} / ${rows.length}`);
