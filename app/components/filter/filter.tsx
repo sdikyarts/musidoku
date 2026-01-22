@@ -21,19 +21,45 @@ type Props = {
     triggerRef?: React.RefObject<HTMLElement | null>;
     selectedTypes?: ArtistTypeValue[];
     onTypesChange?: (types: ArtistTypeValue[]) => void;
+    selectedMisc?: Array<'deceased' | 'disbanded'>;
+    onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
 };
 
 type FilterArtistContentProps = Omit<Props, "visible">;
 
-export default function FilterArtist({ visible, onClickOutside, triggerRef, selectedTypes = [], onTypesChange }: Readonly<Props>) {
+export default function FilterArtist({ visible, onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange }: Readonly<Props>) {
     if (!visible) {
         return null;
     }
 
-    return <FilterArtistContent onClickOutside={onClickOutside} triggerRef={triggerRef} selectedTypes={selectedTypes} onTypesChange={onTypesChange} />;
+    return <FilterArtistContent onClickOutside={onClickOutside} triggerRef={triggerRef} selectedTypes={selectedTypes} onTypesChange={onTypesChange} selectedMisc={selectedMisc} onMiscChange={onMiscChange} />;
 }
 
-function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], onTypesChange }: Readonly<FilterArtistContentProps>) {
+// Helper functions for styling
+const getTypeButtonStyles = (isSelected: boolean) => ({
+    textColor: isSelected ? "#F3FDFB" : "#051411",
+    backgroundColor: isSelected ? "#6D7FD9" : "#E5F4F8",
+});
+
+const getMiscButtonStyles = (isSelected: boolean) => ({
+    textColor: isSelected ? "#F3FDFB" : "#051411",
+    backgroundColor: isSelected ? "#6D7FD9" : "#E5F4F8",
+    iconColor: isSelected ? "#F3FDFB" : undefined,
+});
+
+const getContainerStyles = (isCentered: boolean, padding: number): React.CSSProperties => ({
+    position: isCentered ? "fixed" : "absolute",
+    top: isCentered ? "50%" : "calc(100% + 8px)",
+    left: isCentered ? `${padding}px` : "auto",
+    right: isCentered ? `${padding}px` : 0,
+    transform: isCentered ? "translateY(-50%)" : "none",
+    width: isCentered ? "auto" : "100%",
+    minWidth: isCentered ? "452px" : "800px",
+    maxWidth: isCentered ? "959px" : "none",
+    maxHeight: isCentered ? "min(60vh, 600px)" : "none",
+});
+
+function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange }: Readonly<FilterArtistContentProps>) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const typeButtonRef = useRef<HTMLButtonElement | null>(null);
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
@@ -50,6 +76,18 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
     const handleRemoveType = (type: ArtistTypeValue) => {
         const newTypes = selectedTypes.filter((value) => value !== type);
         onTypesChange?.(newTypes);
+    };
+
+    const handleToggleMisc = (misc: 'deceased' | 'disbanded') => {
+        const newMisc = selectedMisc.includes(misc)
+            ? selectedMisc.filter((value) => value !== misc)
+            : [...selectedMisc, misc];
+        onMiscChange?.(newMisc);
+    };
+
+    const handleRemoveMisc = (misc: 'deceased' | 'disbanded') => {
+        const newMisc = selectedMisc.filter((value) => value !== misc);
+        onMiscChange?.(newMisc);
     };
 
     const closeTypeDropdown = () => {
@@ -87,6 +125,11 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
         };
     }, [onClickOutside, triggerRef]);
 
+    const containerStyles = getContainerStyles(isCenteredPopup, horizontalPadding);
+    const typeButtonStyles = getTypeButtonStyles(selectedTypes.length > 0);
+    const deceasedStyles = getMiscButtonStyles(selectedMisc.includes('deceased'));
+    const disbandedStyles = getMiscButtonStyles(selectedMisc.includes('disbanded'));
+
     return (
         <>
             {isCenteredPopup && (
@@ -111,15 +154,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
             <div
                 ref={containerRef}
                 style={{
-                    position: isCenteredPopup ? "fixed" : "absolute",
-                    top: isCenteredPopup ? "50%" : "calc(100% + 8px)",
-                    left: isCenteredPopup ? `${horizontalPadding}px` : "auto",
-                    right: isCenteredPopup ? `${horizontalPadding}px` : 0,
-                    transform: isCenteredPopup ? "translateY(-50%)" : "none",
-                    width: isCenteredPopup ? "auto" : "100%",
-                    minWidth: isCenteredPopup ? "452px" : "800px",
-                    maxWidth: isCenteredPopup ? "959px" : "none",
-                    maxHeight: isCenteredPopup ? "min(60vh, 600px)" : "none",
+                    ...containerStyles,
                     padding: "16px",
                     gap: "6px",
                     borderRadius: "6px",
@@ -195,6 +230,17 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     onClick={() => handleRemoveType(type)}
                                 />
                             ))}
+                            {selectedMisc.map((misc) => (
+                                <CategoryButton
+                                    key={misc}
+                                    label={misc === 'deceased' ? 'Deceased' : 'Disbanded'}
+                                    textColor="#F3FDFB"
+                                    backgroundColor="#6D7FD9"
+                                    icon={misc === 'deceased' ? <SkullIcon color="#F3FDFB" /> : <BrokenHeartIcon color="#F3FDFB" />}
+                                    showCloseIcon={true}
+                                    onClick={() => handleRemoveMisc(misc)}
+                                />
+                            ))}
                         </div>
                     </div>
                     <div
@@ -263,8 +309,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             ref={typeButtonRef}
                                             icon={selectedTypes.length > 0 ? <PersonIcon color="#F3FDFB" /> : <PersonIcon />}
                                             iconSize={60}
-                                            textColor={selectedTypes.length > 0 ? "#F3FDFB" : "#051411"}
-                                            backgroundColor={selectedTypes.length > 0 ? "#6D7FD9" : "#E5F4F8"}
+                                            textColor={typeButtonStyles.textColor}
+                                            backgroundColor={typeButtonStyles.backgroundColor}
                                             label="Artist Type"
                                             alwaysShowLabel={true}
                                             onClick={() => setIsTypeDropdownOpen((prev) => !prev)}
@@ -396,17 +442,17 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                             >
                                 <CategoryButton
                                     label="Deceased"
-                                    textColor="#051411"
-                                    backgroundColor="#E5F4F8"
-                                    icon={<SkullIcon />}
-                                    onClick={() => {}}
+                                    textColor={deceasedStyles.textColor}
+                                    backgroundColor={deceasedStyles.backgroundColor}
+                                    icon={<SkullIcon color={deceasedStyles.iconColor} />}
+                                    onClick={() => handleToggleMisc('deceased')}
                                 />
                                 <CategoryButton
                                     label="Disbanded"
-                                    textColor="#051411"
-                                    backgroundColor="#E5F4F8"
-                                    icon={<BrokenHeartIcon />}
-                                    onClick={() => {}}
+                                    textColor={disbandedStyles.textColor}
+                                    backgroundColor={disbandedStyles.backgroundColor}
+                                    icon={<BrokenHeartIcon color={disbandedStyles.iconColor} />}
+                                    onClick={() => handleToggleMisc('disbanded')}
                                 />
                             </div>
                         </div>

@@ -13,6 +13,8 @@ export type Artist = {
   imageUrl?: string | null;
   debutYear?: number | null;
   type?: 'solo' | 'group' | 'unknown' | null;
+  isDead?: boolean | null;
+  isDisbanded?: boolean | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -39,6 +41,7 @@ export function filterArtists(
   artists: Artist[],
   queryParam: string | null,
   selectedTypes?: Array<'solo' | 'group'>,
+  selectedMisc?: Array<'deceased' | 'disbanded'>,
 ): Artist[] {
   let filtered = artists;
   
@@ -55,6 +58,17 @@ export function filterArtists(
     filtered = filtered.filter((artist) => 
       artist.type && selectedTypes.includes(artist.type as 'solo' | 'group')
     );
+  }
+  
+  // Filter by miscellaneous categories
+  if (selectedMisc && selectedMisc.length > 0) {
+    filtered = filtered.filter((artist) => {
+      return selectedMisc.some((misc) => {
+        if (misc === 'deceased') return artist.isDead === true;
+        if (misc === 'disbanded') return artist.isDisbanded === true;
+        return false;
+      });
+    });
   }
   
   return filtered;
@@ -149,11 +163,11 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize, selectedTypes }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'> }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'> }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
   
-  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes);
+  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
   const { startIndex } = getPageInfo(
     sortedArtists.length,
