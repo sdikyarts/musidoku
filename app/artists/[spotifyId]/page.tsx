@@ -7,7 +7,7 @@ type Props = {
   params: Promise<{ spotifyId: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Readonly<Props>): Promise<Metadata> {
   const { spotifyId } = await params;
   const artist = await getArtistBySpotifyId(spotifyId);
   
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ArtistPage({ params }: Props) {
+export default async function ArtistPage({ params }: Readonly<Props>) {
   const { spotifyId } = await params;
   const artist = await getArtistBySpotifyId(spotifyId);
 
