@@ -56,6 +56,7 @@ export default function SearchResults({
       {results.map((result, index) => (
         <li key={result.id} style={{ width: "100%" }}>
           <SearchResultEntry
+            id={result.id}
             name={result.name}
             imageUrl={result.imageUrl}
             showDivider={index !== results.length - 1}

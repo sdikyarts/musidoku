@@ -12,6 +12,9 @@ export type Artist = {
   name: string;
   imageUrl?: string | null;
   debutYear?: number | null;
+  type?: 'solo' | 'group' | 'unknown' | null;
+  isDead?: boolean | null;
+  isDisbanded?: boolean | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -37,13 +40,38 @@ function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: 
 export function filterArtists(
   artists: Artist[],
   queryParam: string | null,
+  selectedTypes?: Array<'solo' | 'group'>,
+  selectedMisc?: Array<'deceased' | 'disbanded'>,
 ): Artist[] {
+  let filtered = artists;
+  
+  // Filter by search query
   const query = (queryParam ?? "").trim().toLowerCase();
-  if (!query) return artists;
-
-  return artists.filter((artist) =>
-    artist.name.toLowerCase().includes(query),
-  );
+  if (query) {
+    filtered = filtered.filter((artist) =>
+      artist.name.toLowerCase().includes(query),
+    );
+  }
+  
+  // Filter by artist type
+  if (selectedTypes && selectedTypes.length > 0) {
+    filtered = filtered.filter((artist) => 
+      artist.type && selectedTypes.includes(artist.type as 'solo' | 'group')
+    );
+  }
+  
+  // Filter by miscellaneous categories
+  if (selectedMisc && selectedMisc.length > 0) {
+    filtered = filtered.filter((artist) => {
+      return selectedMisc.some((misc) => {
+        if (misc === 'deceased') return artist.isDead === true;
+        if (misc === 'disbanded') return artist.isDisbanded === true;
+        return false;
+      });
+    });
+  }
+  
+  return filtered;
 }
 
 export function ArtistPagination({
@@ -135,12 +163,11 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize }: Readonly<{ artists: Artist[]; pageSize: number }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'> }>) {
   const searchParams = useSearchParams();
-  const [isMounted, setIsMounted] = useState(false);
-  const [maxColumns, setMaxColumns] = useState(5);
+  const [maxColumns, setMaxColumns] = useState<number | null>(null);
   
-  const filteredArtists = filterArtists(artists, searchParams.get("q"));
+  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
   const { startIndex } = getPageInfo(
     sortedArtists.length,
@@ -170,33 +197,30 @@ export function ArtistGrid({ artists, pageSize }: Readonly<{ artists: Artist[]; 
       const maxCardsPerRow = Math.max(2, Math.floor((availableWidth + gap) / (cardWidth + gap)));
       
       setMaxColumns(maxCardsPerRow);
-      
-      // Set mounted after initial calculations
-      if (!isMounted) {
-        setIsMounted(true);
-      }
     };
     
     calculateMaxColumns();
     globalThis.window.addEventListener('resize', calculateMaxColumns);
     return () => globalThis.window.removeEventListener('resize', calculateMaxColumns);
-  }, [isMounted]);
-  
-  // Use default value during SSR/initial render
-  const actualMaxColumns = isMounted ? maxColumns : 5;
+  }, []);
+
+  // Don't render until we know the column count
+  if (maxColumns === null) {
+    return null;
+  }
 
   return (
     <div 
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${actualMaxColumns}, 200px)`,
+        gridTemplateColumns: `repeat(${maxColumns}, 200px)`,
         gap: "24px",
         justifyContent: "center",
         width: "100%",
       }}
     >
       {pageArtists.map((artist) => (
-        <ArtistCard key={artist.id} name={artist.name} imageUrl={artist.imageUrl} />
+        <ArtistCard key={artist.id} id={artist.id} name={artist.name} imageUrl={artist.imageUrl} />
       ))}
     </div>
   );

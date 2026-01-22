@@ -27,19 +27,27 @@ type Artist = {
   name: string;
   imageUrl?: string | null;
   debutYear?: number | null;
+  type?: 'solo' | 'group' | 'unknown' | null;
+  isDead?: boolean | null;
+  isDisbanded?: boolean | null;
 };
 
 type Props = {
   artists: Artist[];
+  selectedTypes?: Array<'solo' | 'group'>;
+  onTypesChange?: (types: Array<'solo' | 'group'>) => void;
+  selectedMisc?: Array<'deceased' | 'disbanded'>;
+  onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
 };
 
-export default function ArtistSearch({ artists }: Readonly<Props>) {
+export default function ArtistSearch({ artists, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange }: Readonly<Props>) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("q") ?? "";
   const selectedSort = parseSortParam(searchParams.get("sort"));
   const isSortActive = selectedSort !== DEFAULT_ARTIST_SORT;
+  const isFilterActive = selectedTypes.length > 0 || selectedMisc.length > 0;
   const [query, setQuery] = useState(searchValue);
   const [isFocused, setIsFocused] = useState(false);
   const [hoveringResults, setHoveringResults] = useState(false);
@@ -50,6 +58,10 @@ export default function ArtistSearch({ artists }: Readonly<Props>) {
     ? "#6D7FD9"
     : "var(--Colors-Search-Bar-Fill, #C2D4ED)";
   const sortButtonForeground = isSortActive ? "#F3FDFB" : placeholderColor;
+  const filterButtonBackground = isFilterActive
+    ? "#6D7FD9"
+    : "var(--Colors-Search-Bar-Fill, #C2D4ED)";
+  const filterButtonForeground = isFilterActive ? "#F3FDFB" : placeholderColor;
   const textColor = query ? "var(--foreground, #051411)" : placeholderColor;
   const sortButtonRef = useRef<HTMLButtonElement | null>(null);
   const filterButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -290,8 +302,11 @@ export default function ArtistSearch({ artists }: Readonly<Props>) {
         <div style={{ position: "relative" }}>
           <Dropdown
             ref={filterButtonRef}
-            icon={<FilterIcon color={placeholderColor} />}
+            icon={<FilterIcon color={filterButtonForeground} />}
             label="Filter"
+            textColor={filterButtonForeground}
+            arrowColor={filterButtonForeground}
+            backgroundColor={filterButtonBackground}
             contentGap={4}
             onClick={() => {
               closeSort();
@@ -302,6 +317,10 @@ export default function ArtistSearch({ artists }: Readonly<Props>) {
             visible={showFilterOptions}
             onClickOutside={closeFilter}
             triggerRef={filterButtonRef}
+            selectedTypes={selectedTypes}
+            onTypesChange={onTypesChange}
+            selectedMisc={selectedMisc}
+            onMiscChange={onMiscChange}
           />
         </div>
       </div>

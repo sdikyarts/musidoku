@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { calculateHorizontalPadding } from "@/lib/layout/padding";
 
 export default function ResponsiveLayout({
@@ -9,21 +10,29 @@ export default function ResponsiveLayout({
   children: React.ReactNode;
 }>) {
   const [padding, setPadding] = useState(224);
+  const pathname = usePathname();
+  
+  // Check if we're on an individual artist page
+  const isArtistPage = pathname?.startsWith('/artists/') && pathname !== '/artists';
 
   useEffect(() => {
     const updatePadding = () => {
-      const newPadding = calculateHorizontalPadding();
+      let newPadding = calculateHorizontalPadding();
+      // Cap padding at 160px for individual artist pages
+      if (isArtistPage && newPadding > 160) {
+        newPadding = 160;
+      }
       setPadding(newPadding);
     };
 
     updatePadding();
     globalThis.window.addEventListener('resize', updatePadding);
     return () => globalThis.window.removeEventListener('resize', updatePadding);
-  }, []);
+  }, [isArtistPage]);
 
   return (
-    <>
-      <div style={{ padding: `96px ${padding}px 36px ${padding}px` }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ padding: `96px ${padding}px 36px ${padding}px`, flex: '1' }}>
         {children}
       </div>
       <div 
@@ -53,6 +62,6 @@ export default function ResponsiveLayout({
           made by: lorem ipsum
         </p>
       </div>
-    </>
+    </div>
   );
 }
