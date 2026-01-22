@@ -60,7 +60,7 @@ async function setupProduction() {
           columns: true,
           skip_empty_lines: true,
           trim: true,
-        }),
+        }) as Record<string, string>[],
     };
 
     const productionRepository = {
