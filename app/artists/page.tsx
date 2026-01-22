@@ -2,6 +2,8 @@ import ArtistsPageClient from "./ArtistsPageClient";
 import type { Metadata } from "next";
 import { listArtists } from "@/lib/artists/repo";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Artists Roster",
 };
