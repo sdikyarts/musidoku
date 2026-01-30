@@ -1,4 +1,4 @@
-import { getArtistBySpotifyId } from "@/lib/artists/repo";
+import { getArtistBySpotifyId, getPreviousArtist, getNextArtist, getTotalArtistCount } from "@/lib/artists/repo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ArtistPageClient from "./ArtistPageClient";
@@ -30,5 +30,18 @@ export default async function ArtistPage({ params }: Readonly<Props>) {
     notFound();
   }
 
-  return <ArtistPageClient artist={artist} />;
+  const rosterOrder = artist.roster_order ?? 0;
+  const prevArtist = await getPreviousArtist(rosterOrder);
+  const nextArtist = await getNextArtist(rosterOrder);
+  const totalArtists = await getTotalArtistCount();
+
+  return (
+    <ArtistPageClient 
+      artist={artist} 
+      prevArtistId={prevArtist?.spotify_id ?? null}
+      nextArtistId={nextArtist?.spotify_id ?? null}
+      currentPosition={rosterOrder}
+      totalArtists={totalArtists}
+    />
+  );
 }

@@ -21,7 +21,9 @@ function calculatePageSize() {
   
   const screenWidth = globalThis.window.innerWidth;
   const padding = calculateHorizontalPadding(screenWidth);
-  const cardWidth = 200;
+  
+  // Use smaller card size for narrow screens
+  const cardWidth = screenWidth < 500 ? 160 : 200;
   const gap = 24;
   
   // Calculate how many cards fit in a row with current padding
@@ -81,12 +83,12 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
   const getTitleFontSize = () => {
     if (screenWidth >= 1280) return "42px";
     if (screenWidth >= 960) return "38px"; 
-    if (screenWidth >= 777) return "34px";
-    return "34px"; // Same as 777px+ for narrower screens
+    if (screenWidth >= 799) return "34px";
+    return "28px"; // Smaller for 798px and below
   };
   
   const titleFontSize = getTitleFontSize();
-  const titleGap = screenWidth >= 777 ? "10px" : "6px";
+  const titleGap = screenWidth >= 799 ? "10px" : "6px";
   
   // Responsive container width - wider to prevent text wrapping
   const getTitleContainerWidth = () => {
@@ -98,15 +100,15 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
   
   const titleContainerWidth = getTitleContainerWidth();
   
-  // Responsive font sizes for body text (slightly smaller on narrow screens)
+  // Responsive font sizes for body text (smaller on narrow screens)
   const getBodyFontSize = () => {
     if (screenWidth > 798) return "16px";
-    return "15px"; // Slightly smaller for 798px and below
+    return "14px"; // Smaller for 798px and below
   };
   
   const getBodyLineHeight = () => {
     if (screenWidth > 798) return "24px";
-    return "22px"; // Proportionally smaller line height
+    return "20px"; // Proportionally smaller line height
   };
   
   const bodyFontSize = getBodyFontSize();
@@ -114,7 +116,11 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
   
   // Simple spacing based on your exact specifications
   const getGridTopSpacing = () => {
-    if (screenWidth <=720) {
+    if (screenWidth < 500) {
+      return "12px";
+    }
+
+    if (screenWidth >= 500 && screenWidth <= 720) {
       return "8px";
     }
 
