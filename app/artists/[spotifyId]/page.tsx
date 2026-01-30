@@ -30,8 +30,9 @@ export default async function ArtistPage({ params }: Readonly<Props>) {
     notFound();
   }
 
-  const prevArtist = await getPreviousArtist(artist.roster_order);
-  const nextArtist = await getNextArtist(artist.roster_order);
+  const rosterOrder = artist.roster_order ?? 0;
+  const prevArtist = await getPreviousArtist(rosterOrder);
+  const nextArtist = await getNextArtist(rosterOrder);
   const totalArtists = await getTotalArtistCount();
 
   return (
@@ -39,7 +40,7 @@ export default async function ArtistPage({ params }: Readonly<Props>) {
       artist={artist} 
       prevArtistId={prevArtist?.spotify_id ?? null}
       nextArtistId={nextArtist?.spotify_id ?? null}
-      currentPosition={artist.roster_order}
+      currentPosition={rosterOrder}
       totalArtists={totalArtists}
     />
   );
