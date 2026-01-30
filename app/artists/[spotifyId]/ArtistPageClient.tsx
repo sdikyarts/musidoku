@@ -41,12 +41,12 @@ type ArtistInfoProps = {
 };
 
 // Style helper functions
-function getPaginationContainerStyle(isAbsolute: boolean) {
+function getPaginationContainerStyle(isAbsolute: boolean, isNarrowScreen: boolean) {
   const baseStyle = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    width: "224px",
+    width: isNarrowScreen && !isAbsolute ? "100%" : "224px",
     gap: "12px",
   };
   
@@ -83,8 +83,10 @@ function getPaginationTextStyle(screenWidth: number) {
 }
 
 function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, screenWidth, isAbsolute = false }: Readonly<PaginationProps>) {
+  const isNarrowScreen = screenWidth < 799;
+  
   return (
-    <div style={getPaginationContainerStyle(isAbsolute)}>
+    <div style={getPaginationContainerStyle(isAbsolute, isNarrowScreen)}>
       <Link href={prevArtistId ? `/artists/${prevArtistId}` : "#"} style={getPaginationLinkStyle(!!prevArtistId)}>
         <ChevronLeftIcon size={28} color="#051411" />
       </Link>
