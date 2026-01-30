@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { GET } from "./route";
 import { NextRequest } from "next/server";
-import { createMockArtist, mockArtists } from "../test-utils";
+import { mockArtists } from "../test-utils";
 
 vi.mock("@/lib/artists/repo", () => ({
   getArtistBySpotifyId: vi.fn(),
