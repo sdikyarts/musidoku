@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { GET } from "./route";
 import { NextRequest } from "next/server";
-import type { Artist } from "@/db/schema/artists";
+import { createMockArtist, mockArtists } from "../test-utils";
 
 vi.mock("@/lib/artists/repo", () => ({
   getArtistBySpotifyId: vi.fn(),
@@ -15,29 +15,7 @@ describe("GET /api/artists/[spotifyId]", () => {
   });
 
   it("returns artist when found", async () => {
-    const mockArtist: Artist = {
-      scraper_name: "Drake",
-      spotify_id: "3TVXtAsR1Inumwj472S9r4",
-      roster_order: 0,
-      mb_id: "00000000-0000-0000-0000-000000000000",
-      mb_type_raw: "Person",
-      parsed_artist_type: "solo",
-      gender: "male",
-      country: "CA",
-      birth_date: null,
-      death_date: null,
-      disband_date: null,
-      debut_year: 2006,
-      member_count: null,
-      genres: "hip hop",
-      primary_genre: "hip hop",
-      secondary_genre: null,
-      is_dead: false,
-      is_disbanded: null,
-      scraper_image_url: null,
-      chartmasters_name: null,
-    };
-    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtist);
+    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtists.drake);
 
     const req = new NextRequest("http://localhost:3000/api/artists/3TVXtAsR1Inumwj472S9r4");
     const context = { params: Promise.resolve({ spotifyId: "3TVXtAsR1Inumwj472S9r4" }) };
@@ -45,7 +23,7 @@ describe("GET /api/artists/[spotifyId]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toEqual(mockArtist);
+    expect(data).toEqual(mockArtists.drake);
     expect(getArtistBySpotifyId).toHaveBeenCalledWith("3TVXtAsR1Inumwj472S9r4");
   });
 
@@ -72,29 +50,7 @@ describe("GET /api/artists/[spotifyId]", () => {
   });
 
   it("trims whitespace from spotify ID", async () => {
-    const mockArtist: Artist = {
-      scraper_name: "Drake",
-      spotify_id: "3TVXtAsR1Inumwj472S9r4",
-      roster_order: 0,
-      mb_id: "00000000-0000-0000-0000-000000000000",
-      mb_type_raw: "Person",
-      parsed_artist_type: "solo",
-      gender: "male",
-      country: "CA",
-      birth_date: null,
-      death_date: null,
-      disband_date: null,
-      debut_year: 2006,
-      member_count: null,
-      genres: "hip hop",
-      primary_genre: "hip hop",
-      secondary_genre: null,
-      is_dead: false,
-      is_disbanded: null,
-      scraper_image_url: null,
-      chartmasters_name: null,
-    };
-    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtist);
+    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtists.drake);
 
     const req = new NextRequest("http://localhost:3000/api/artists/3TVXtAsR1Inumwj472S9r4");
     const context = { params: Promise.resolve({ spotifyId: "  3TVXtAsR1Inumwj472S9r4  " }) };

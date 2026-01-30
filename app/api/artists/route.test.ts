@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import { GET } from "./route";
 import { NextRequest } from "next/server";
 import type { Artist } from "@/db/schema/artists";
+import { mockArtists } from "./test-utils";
 
 vi.mock("@/lib/artists/repo", () => ({
   listArtists: vi.fn(),
@@ -15,96 +16,28 @@ describe("GET /api/artists", () => {
   });
 
   it("returns artists with valid query parameters", async () => {
-    const mockArtists: Artist[] = [
-      {
-        scraper_name: "Drake",
-        spotify_id: "3TVXtAsR1Inumwj472S9r4",
-        roster_order: 0,
-        mb_id: "00000000-0000-0000-0000-000000000000",
-        mb_type_raw: "Person",
-        parsed_artist_type: "solo",
-        gender: "male",
-        country: "CA",
-        birth_date: null,
-        death_date: null,
-        disband_date: null,
-        debut_year: 2006,
-        member_count: null,
-        genres: "hip hop",
-        primary_genre: "hip hop",
-        secondary_genre: null,
-        is_dead: false,
-        is_disbanded: null,
-        scraper_image_url: null,
-        chartmasters_name: null,
-      },
-      {
-        scraper_name: "Taylor Swift",
-        spotify_id: "06HL4z0CvFAxyc27GXpf02",
-        roster_order: 1,
-        mb_id: "00000000-0000-0000-0000-000000000001",
-        mb_type_raw: "Person",
-        parsed_artist_type: "solo",
-        gender: "female",
-        country: "US",
-        birth_date: null,
-        death_date: null,
-        disband_date: null,
-        debut_year: 2006,
-        member_count: null,
-        genres: "pop",
-        primary_genre: "pop",
-        secondary_genre: null,
-        is_dead: false,
-        is_disbanded: null,
-        scraper_image_url: null,
-        chartmasters_name: null,
-      },
-    ];
-    vi.mocked(listArtists).mockResolvedValue(mockArtists);
+    const artists = [mockArtists.drake, mockArtists.taylorSwift];
+    vi.mocked(listArtists).mockResolvedValue(artists);
 
     const req = new NextRequest("http://localhost:3000/api/artists?limit=10&offset=0");
     const response = await GET(req);
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toEqual(mockArtists);
+    expect(data).toEqual(artists);
     expect(listArtists).toHaveBeenCalledWith({ limit: 10, offset: 0 });
   });
 
   it("returns artists with search query", async () => {
-    const mockArtists: Artist[] = [
-      {
-        scraper_name: "Drake",
-        spotify_id: "3TVXtAsR1Inumwj472S9r4",
-        roster_order: 0,
-        mb_id: "00000000-0000-0000-0000-000000000000",
-        mb_type_raw: "Person",
-        parsed_artist_type: "solo",
-        gender: "male",
-        country: "CA",
-        birth_date: null,
-        death_date: null,
-        disband_date: null,
-        debut_year: 2006,
-        member_count: null,
-        genres: "hip hop",
-        primary_genre: "hip hop",
-        secondary_genre: null,
-        is_dead: false,
-        is_disbanded: null,
-        scraper_image_url: null,
-        chartmasters_name: null,
-      },
-    ];
-    vi.mocked(listArtists).mockResolvedValue(mockArtists);
+    const artists = [mockArtists.drake];
+    vi.mocked(listArtists).mockResolvedValue(artists);
 
     const req = new NextRequest("http://localhost:3000/api/artists?q=Drake");
     const response = await GET(req);
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toEqual(mockArtists);
+    expect(data).toEqual(artists);
     expect(listArtists).toHaveBeenCalledWith({ query: "Drake", limit: 50, offset: 0 });
   });
 
