@@ -4,69 +4,24 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
+import { commonOptions, createArtistChecks, logProcessingTime, getBaseUrl } from './shared.js';
 
 // Custom metrics
 const errorRate = new Rate('errors');
 
-export const options = {
-  stages: [
-    { duration: '30s', target: 10 },  // Ramp up to 10 users
-    { duration: '1m', target: 10 },   // Stay at 10 users
-    { duration: '30s', target: 20 },  // Ramp up to 20 users
-    { duration: '1m', target: 20 },   // Stay at 20 users
-    { duration: '30s', target: 0 },   // Ramp down
-  ],
-  thresholds: {
-    http_req_duration: ['p(95)<5000'], // 95% of requests should be below 5s
-    errors: ['rate<0.1'],              // Error rate should be below 10%
-  },
-};
+export const options = commonOptions;
 
 export default function () {
-  const baseUrl = __ENV.BASE_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   const url = `${baseUrl}/api/heavy-task`;
   
   const response = http.get(url);
   
-  const success = check(response, {
-    'status is 200': (r) => r.status === 200,
-    'response has target_artist': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.target_artist !== undefined;
-      } catch {
-        return false;
-      }
-    },
-    'response has similar_artists': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return Array.isArray(body.similar_artists);
-      } catch {
-        return false;
-      }
-    },
-    'processing time recorded': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.metadata?.processing_time_ms !== undefined;
-      } catch {
-        return false;
-      }
-    },
-  });
+  const success = check(response, createArtistChecks());
   
   errorRate.add(!success);
   
-  // Log processing time for analysis
-  if (response.status === 200) {
-    try {
-      const body = JSON.parse(response.body);
-      console.log(`Processing time: ${body.metadata.processing_time_ms}ms`);
-    } catch {
-      // Ignore parse errors
-    }
-  }
+  logProcessingTime(response);
   
   sleep(1); // Wait 1 second between requests
 }
