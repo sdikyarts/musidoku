@@ -1,5 +1,6 @@
 // k6-scripts/optimized-heavy-task.js
 // K6 Load Test for OPTIMIZED heavy-task endpoint
+/* eslint-disable import/no-anonymous-default-export */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
@@ -70,7 +71,7 @@ export default function () {
     try {
       const body = JSON.parse(response.body);
       console.log(`Processing time: ${body.metadata.processing_time_ms}ms`);
-    } catch (e) {
+    } catch {
       // Ignore parse errors
     }
   }

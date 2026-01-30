@@ -1,5 +1,6 @@
 // k6-scripts/comparison-test.js
 // Side-by-side comparison test for both endpoints
+/* eslint-disable import/no-anonymous-default-export */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
@@ -37,7 +38,7 @@ export default function () {
     try {
       const body = JSON.parse(baselineResponse.body);
       baselineProcessingTime.add(body.metadata.processing_time_ms);
-    } catch (e) {
+    } catch {
       // Ignore
     }
   }
@@ -59,7 +60,7 @@ export default function () {
     try {
       const body = JSON.parse(optimizedResponse.body);
       optimizedProcessingTime.add(body.metadata.processing_time_ms);
-    } catch (e) {
+    } catch {
       // Ignore
     }
   }

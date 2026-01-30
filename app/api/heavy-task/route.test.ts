@@ -41,7 +41,7 @@ describe('GET /api/heavy-task', () => {
     // Mock database response - return array directly
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockResolvedValue(mockArtists),
-    } as any);
+    } as unknown as ReturnType<typeof db.select>);
 
     const response = await GET();
     const data = await response.json();

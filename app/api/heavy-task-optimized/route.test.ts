@@ -49,14 +49,14 @@ describe('GET /api/heavy-task-optimized', () => {
           from: vi.fn().mockReturnThis(),
           orderBy: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue(mockTargetArtist),
-        } as any;
+        } as unknown as ReturnType<typeof db.select>;
       } else {
         // Second call: get candidates
         return {
           from: vi.fn().mockReturnThis(),
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue(mockCandidates),
-        } as any;
+        } as unknown as ReturnType<typeof db.select>;
       }
     });
 
@@ -77,7 +77,7 @@ describe('GET /api/heavy-task-optimized', () => {
       from: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
       limit: vi.fn().mockResolvedValue([]),
-    } as any);
+    } as unknown as ReturnType<typeof db.select>);
 
     const response = await GET();
     const data = await response.json();
