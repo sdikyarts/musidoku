@@ -17,48 +17,31 @@ describe('GET /api/heavy-task-optimized', () => {
 
   it('should return similar artists with optimized flag', async () => {
     // Mock artist data
-    const mockTargetArtist = [
+    const mockArtists = [
       {
         spotify_id: '1',
         scraper_name: 'Artist One',
         genres: 'pop,rock',
         primary_genre: 'pop',
       },
-    ];
-
-    const mockCandidates = [
       {
         spotify_id: '2',
         scraper_name: 'Artist Two',
         genres: 'pop,electronic',
+        primary_genre: 'pop',
       },
       {
         spotify_id: '3',
         scraper_name: 'Artist Three',
         genres: 'pop,rock',
+        primary_genre: 'pop',
       },
     ];
 
-    // Mock database responses
-    let callCount = 0;
-    vi.mocked(db.select).mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) {
-        // First call: get random artist
-        return {
-          from: vi.fn().mockReturnThis(),
-          orderBy: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue(mockTargetArtist),
-        } as unknown as ReturnType<typeof db.select>;
-      } else {
-        // Second call: get candidates
-        return {
-          from: vi.fn().mockReturnThis(),
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue(mockCandidates),
-        } as unknown as ReturnType<typeof db.select>;
-      }
-    });
+    // Mock database response - single query returns all artists
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockResolvedValue(mockArtists),
+    } as unknown as ReturnType<typeof db.select>);
 
     const response = await GET();
     const data = await response.json();
@@ -74,9 +57,7 @@ describe('GET /api/heavy-task-optimized', () => {
   it('should handle empty database gracefully', async () => {
     // Mock empty database
     vi.mocked(db.select).mockReturnValue({
-      from: vi.fn().mockReturnThis(),
-      orderBy: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([]),
+      from: vi.fn().mockResolvedValue([]),
     } as unknown as ReturnType<typeof db.select>);
 
     const response = await GET();
