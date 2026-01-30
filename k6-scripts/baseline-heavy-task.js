@@ -4,12 +4,12 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
-import { commonOptions, createArtistChecks, logProcessingTime, getBaseUrl } from './shared.js';
+import { createArtistChecks, logProcessingTime, getBaseUrl } from './shared.js';
 
 // Custom metrics
 const errorRate = new Rate('errors');
 
-export const options = commonOptions;
+export { commonOptions as options } from './shared.js';
 
 export default function () {
   const baseUrl = getBaseUrl();

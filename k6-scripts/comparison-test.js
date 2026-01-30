@@ -4,6 +4,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
+import { getBaseUrl } from './shared.js';
 
 // Custom metrics for comparison
 const baselineResponseTime = new Trend('baseline_response_time');
@@ -22,51 +23,35 @@ export const options = {
   ],
 };
 
-export default function () {
-  const baseUrl = __ENV.BASE_URL || 'http://localhost:3000';
-  
-  // Test baseline endpoint
-  const baselineUrl = `${baseUrl}/api/heavy-task`;
-  const baselineResponse = http.get(baselineUrl);
-  
-  const baselineSuccess = check(baselineResponse, {
-    'baseline: status is 200': (r) => r.status === 200,
+function testEndpoint(url, label, responseTimeTrend, processingTimeTrend) {
+  const response = http.get(url);
+  const success = check(response, {
+    [`${label}: status is 200`]: (r) => r.status === 200,
   });
   
-  if (baselineSuccess) {
-    baselineResponseTime.add(baselineResponse.timings.duration);
+  if (success) {
+    responseTimeTrend.add(response.timings.duration);
     try {
-      const body = JSON.parse(baselineResponse.body);
-      baselineProcessingTime.add(body.metadata.processing_time_ms);
+      const body = JSON.parse(response.body);
+      processingTimeTrend.add(body.metadata.processing_time_ms);
     } catch {
-      // Ignore
+      // Ignore parse errors
     }
   }
   
-  errorRate.add(!baselineSuccess);
+  errorRate.add(!success);
+  return success;
+}
+
+export default function () {
+  const baseUrl = getBaseUrl();
   
+  // Test baseline endpoint
+  testEndpoint(`${baseUrl}/api/heavy-task`, 'baseline', baselineResponseTime, baselineProcessingTime);
   sleep(0.5);
   
   // Test optimized endpoint
-  const optimizedUrl = `${baseUrl}/api/heavy-task-optimized`;
-  const optimizedResponse = http.get(optimizedUrl);
-  
-  const optimizedSuccess = check(optimizedResponse, {
-    'optimized: status is 200': (r) => r.status === 200,
-  });
-  
-  if (optimizedSuccess) {
-    optimizedResponseTime.add(optimizedResponse.timings.duration);
-    try {
-      const body = JSON.parse(optimizedResponse.body);
-      optimizedProcessingTime.add(body.metadata.processing_time_ms);
-    } catch {
-      // Ignore
-    }
-  }
-  
-  errorRate.add(!optimizedSuccess);
-  
+  testEndpoint(`${baseUrl}/api/heavy-task-optimized`, 'optimized', optimizedResponseTime, optimizedProcessingTime);
   sleep(1);
 }
 

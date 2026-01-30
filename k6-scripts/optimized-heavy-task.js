@@ -4,7 +4,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
-import { getBaseUrl, logProcessingTime } from './shared.js';
+import { getBaseUrl, logProcessingTime, createArtistChecks } from './shared.js';
 
 // Custom metrics
 const errorRate = new Rate('errors');
@@ -29,32 +29,8 @@ export default function () {
   
   const response = http.get(url);
   
-  const success = check(response, {
-    'status is 200': (r) => r.status === 200,
-    'response has target_artist': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.target_artist !== undefined;
-      } catch {
-        return false;
-      }
-    },
-    'response has similar_artists': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return Array.isArray(body.similar_artists);
-      } catch {
-        return false;
-      }
-    },
-    'processing time recorded': (r) => {
-      try {
-        const body = JSON.parse(r.body);
-        return body.metadata?.processing_time_ms !== undefined;
-      } catch {
-        return false;
-      }
-    },
+  const checks = {
+    ...createArtistChecks(),
     'optimized flag is true': (r) => {
       try {
         const body = JSON.parse(r.body);
@@ -63,10 +39,10 @@ export default function () {
         return false;
       }
     },
-  });
+  };
   
+  const success = check(response, checks);
   errorRate.add(!success);
-  
   logProcessingTime(response);
   
   sleep(1); // Wait 1 second between requests
