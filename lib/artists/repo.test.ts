@@ -1,31 +1,31 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
+// Create helper functions to reduce nesting
+const createOffsetMock = () => vi.fn(() => Promise.resolve([]));
+const createLimitMock = () => vi.fn(() => ({ offset: createOffsetMock() }));
+const createOrderByMock = () => vi.fn(() => ({ limit: createLimitMock() }));
+const createWhereMock = () => vi.fn(() => ({
+  orderBy: createOrderByMock(),
+  limit: vi.fn(() => Promise.resolve([])),
+}));
+
+const createFromMock = (fields?: Record<string, unknown>) => {
+  // If select was called with fields (like getTotalArtistCount does), return array directly
+  if (fields) {
+    return Promise.resolve([]);
+  }
+  // Otherwise return the full chain for other methods
+  return {
+    where: createWhereMock(),
+    orderBy: createOrderByMock(),
+    limit: vi.fn(() => Promise.resolve([])),
+  };
+};
+
 // Create a proper mock for the db module
 const mockDb = {
   select: vi.fn((fields?: Record<string, unknown>) => ({
-    from: vi.fn(() => {
-      // If select was called with fields (like getTotalArtistCount does), return array directly
-      if (fields) {
-        return Promise.resolve([]);
-      }
-      // Otherwise return the full chain for other methods
-      return {
-        where: vi.fn(() => ({
-          orderBy: vi.fn(() => ({
-            limit: vi.fn(() => ({
-              offset: vi.fn(() => Promise.resolve([])),
-            })),
-          })),
-          limit: vi.fn(() => Promise.resolve([])),
-        })),
-        orderBy: vi.fn(() => ({
-          limit: vi.fn(() => ({
-            offset: vi.fn(() => Promise.resolve([])),
-          })),
-        })),
-        limit: vi.fn(() => Promise.resolve([])),
-      };
-    }),
+    from: vi.fn(() => createFromMock(fields)),
   })),
 };
 
