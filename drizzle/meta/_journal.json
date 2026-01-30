@@ -15,6 +15,13 @@
       "when": 1769072634817,
       "tag": "0001_harsh_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769780200755,
+      "tag": "0002_sleepy_inhumans",
+      "breakpoints": true
     }
   ]
 }

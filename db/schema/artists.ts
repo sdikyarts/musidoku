@@ -29,17 +29,18 @@ export const genderEnum = pgEnum('gender_enum', [
 export const genreEnum = pgEnum('genre_enum', [
   'afrobeats',
   'alternative',
+  'bollywood',
   'country',
   'electronic',
   'hip hop',
   'k-pop',
   'latin',
   'metal',
-  'other',
   'pop',
   'r&b',
   'reggae',
   'rock',
+  'soundtrack',
 ]);
 
 export const artists = pgTable('artists', {
