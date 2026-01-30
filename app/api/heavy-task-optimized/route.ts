@@ -3,7 +3,6 @@
 import { db } from "@/lib/db";
 import { artists } from "@/db/schema/artists";
 import { NextResponse } from "next/server";
-import { sql } from "drizzle-orm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +25,7 @@ function calculateGenreSimilarityOptimized(artist1Genres: string, artist2Genres:
 }
 
 /**
- * OPTIMIZED: Simplified similarity check - only calculate full distance if needed
+ * OPTIMIZED: Simplified similarity check - avoid expensive calculations
  */
 function quickNameSimilarity(str1: string, str2: string): number {
   const s1 = str1.toLowerCase();
@@ -36,40 +35,22 @@ function quickNameSimilarity(str1: string, str2: string): number {
   if (s1 === s2) return 1;
   if (s1.includes(s2) || s2.includes(s1)) return 0.8;
   
-  // Length difference check - if too different, skip expensive calculation
+  // Length difference check - if too different, return low score
   const lengthDiff = Math.abs(s1.length - s2.length);
-  if (lengthDiff > Math.max(s1.length, s2.length) * 0.5) {
+  const maxLength = Math.max(s1.length, s2.length);
+  if (lengthDiff > maxLength * 0.5) {
     return 0;
   }
   
-  // Only calculate Levenshtein for potentially similar names
-  return 1 - (levenshteinDistanceOptimized(s1, s2) / Math.max(s1.length, s2.length));
-}
-
-/**
- * OPTIMIZED: Levenshtein with single array instead of matrix
- */
-function levenshteinDistanceOptimized(str1: string, str2: string): number {
-  const m = str1.length;
-  const n = str2.length;
-  
-  // Use single array instead of full matrix
-  let prev = Array(n + 1).fill(0).map((_, i) => i);
-  let curr = Array(n + 1).fill(0);
-  
-  for (let i = 1; i <= m; i++) {
-    curr[0] = i;
-    for (let j = 1; j <= n; j++) {
-      if (str1[i - 1] === str2[j - 1]) {
-        curr[j] = prev[j - 1];
-      } else {
-        curr[j] = Math.min(prev[j], curr[j - 1], prev[j - 1]) + 1;
-      }
-    }
-    [prev, curr] = [curr, prev];
+  // Simple character overlap instead of Levenshtein
+  const chars1 = new Set(s1.split(''));
+  const chars2 = new Set(s2.split(''));
+  let overlap = 0;
+  for (const char of chars1) {
+    if (chars2.has(char)) overlap++;
   }
   
-  return prev[n];
+  return overlap / Math.max(chars1.size, chars2.size);
 }
 
 /**
@@ -82,35 +63,30 @@ function levenshteinDistanceOptimized(str1: string, str2: string): number {
 export async function GET() {
   const startTime = Date.now();
   
-  // Get a random artist ID first
-  const randomArtist = await db
+  // OPTIMIZATION 1: Single query to get all artists with only needed fields
+  // This is faster than multiple queries for small-medium datasets
+  const allArtists = await db
     .select({
       spotify_id: artists.spotify_id,
       scraper_name: artists.scraper_name,
       genres: artists.genres,
       primary_genre: artists.primary_genre,
     })
-    .from(artists)
-    .orderBy(sql`RANDOM()`)
-    .limit(1);
+    .from(artists);
   
-  if (randomArtist.length === 0) {
+  if (allArtists.length === 0) {
     return NextResponse.json({ error: "No artists found" }, { status: 404 });
   }
   
-  const targetArtist = randomArtist[0];
+  // Pick a random artist
+  const targetIndex = Math.floor(Math.random() * allArtists.length);
+  const targetArtist = allArtists[targetIndex];
   
-  // OPTIMIZATION 1: Filter by primary genre at database level
-  // This reduces the dataset we need to process in memory
-  const candidateArtists = await db
-    .select({
-      spotify_id: artists.spotify_id,
-      scraper_name: artists.scraper_name,
-      genres: artists.genres,
-    })
-    .from(artists)
-    .where(sql`${artists.primary_genre} = ${targetArtist.primary_genre}`)
-    .limit(500); // Limit to reasonable subset
+  // OPTIMIZATION 2: Filter by primary genre in memory (fast for small datasets)
+  const candidateArtists = allArtists.filter(
+    a => a.spotify_id !== targetArtist.spotify_id && 
+         a.primary_genre === targetArtist.primary_genre
+  );
   
   // OPTIMIZATION 2: Use a min-heap approach to keep only top 10
   const topSimilar: Array<{
@@ -120,10 +96,9 @@ export async function GET() {
     similarity_score: number;
   }> = [];
   
-  const minScore = 0.3; // Early termination threshold
+  const minScore = 0.2; // Lower threshold for early termination
   
   for (const artist of candidateArtists) {
-    if (artist.spotify_id === targetArtist.spotify_id) continue;
     
     // Calculate genre similarity first (cheaper operation)
     const genreSimilarity = calculateGenreSimilarityOptimized(
