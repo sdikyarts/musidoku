@@ -1,5 +1,7 @@
 // app/api/heavy-task/test-utils.ts
 // Shared test utilities for heavy-task endpoints
+import { vi, expect } from 'vitest';
+import { db } from '@/lib/db';
 
 export const mockArtists = [
   {
@@ -29,3 +31,10 @@ export function expectValidResponse(data: unknown, optimized: boolean) {
   expect((data as { metadata: { optimized: boolean } }).metadata.optimized).toBe(optimized);
   expect(Array.isArray((data as { similar_artists: unknown[] }).similar_artists)).toBe(true);
 }
+
+export function mockDbSelect(artists: typeof mockArtists) {
+  vi.mocked(db.select).mockReturnValue({
+    from: vi.fn().mockResolvedValue(artists),
+  } as unknown as ReturnType<typeof db.select>);
+}
+
