@@ -1,4 +1,5 @@
 import { getArtistBySpotifyId, getPreviousArtist, getNextArtist, getTotalArtistCount } from "@/lib/artists/repo";
+import { formatRosterNumber } from "@/lib/artists/formatters";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ArtistPageClient from "./ArtistPageClient";
@@ -40,7 +41,7 @@ export default async function ArtistPage({ params }: Readonly<Props>) {
       artist={artist} 
       prevArtistId={prevArtist?.spotify_id ?? null}
       nextArtistId={nextArtist?.spotify_id ?? null}
-      currentPosition={rosterOrder}
+      currentPosition={formatRosterNumber(artist.roster_order)}
       totalArtists={totalArtists}
     />
   );
