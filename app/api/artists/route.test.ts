@@ -35,7 +35,7 @@ describe("GET /api/artists", () => {
     ];
     vi.mocked(listArtists).mockResolvedValue(mockArtists as any);
 
-    const req = new NextRequest("http://localhost:3000/api/artists?query=Drake");
+    const req = new NextRequest("http://localhost:3000/api/artists?q=Drake");
     const response = await GET(req);
     const data = await response.json();
 

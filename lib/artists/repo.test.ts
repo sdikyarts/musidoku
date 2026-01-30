@@ -1,16 +1,15 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import {
-  listArtists,
-  getArtistBySpotifyId,
-  getTotalArtistCount,
-  getPreviousArtist,
-  getNextArtist,
-} from "./repo";
 
-vi.mock("@/lib/db", () => ({
-  db: {
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
+// Create a proper mock for the db module
+const mockDb = {
+  select: vi.fn((fields?: any) => ({
+    from: vi.fn(() => {
+      // If select was called with fields (like getTotalArtistCount does), return array directly
+      if (fields) {
+        return Promise.resolve([]);
+      }
+      // Otherwise return the full chain for other methods
+      return {
         where: vi.fn(() => ({
           orderBy: vi.fn(() => ({
             limit: vi.fn(() => ({
@@ -25,12 +24,29 @@ vi.mock("@/lib/db", () => ({
           })),
         })),
         limit: vi.fn(() => Promise.resolve([])),
-      })),
-    })),
-  },
+      };
+    }),
+  })),
+};
+
+vi.mock("@/lib/db", () => ({
+  db: mockDb,
 }));
 
+// Import after mocking
+const {
+  listArtists,
+  getArtistBySpotifyId,
+  getTotalArtistCount,
+  getPreviousArtist,
+  getNextArtist,
+} = await import("./repo");
+
 describe("listArtists", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("normalizes limit to default when invalid", async () => {
     await listArtists({ limit: -1, offset: 0 });
     // Should use default limit of 50
@@ -71,7 +87,8 @@ describe("getArtistBySpotifyId", () => {
 describe("getTotalArtistCount", () => {
   it("returns count of all artists", async () => {
     const count = await getTotalArtistCount();
-    expect(typeof count).toBe("number");
+    // With mocked db returning empty array, this returns 0
+    expect(count).toBe(0);
   });
 });
 
