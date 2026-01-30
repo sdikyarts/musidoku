@@ -1,0 +1,62 @@
+name: Performance Testing
+
+# Only run manually, not on every push
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  performance-test:
+    name: K6 Load Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install K6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: Run K6 baseline test
+        env:
+          BASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_URL || secrets.STAGING_URL }}
+        run: |
+          k6 run k6-scripts/baseline-heavy-task.js --out json=results/baseline.json
+      
+      - name: Run K6 optimized test
+        env:
+          BASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.PRODUCTION_URL || secrets.STAGING_URL }}
+        run: |
+          k6 run k6-scripts/optimized-heavy-task.js --out json=results/optimized.json
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: results/*.json
+          retention-days: 30
+      
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## Performance Test Results\n\nPerformance tests completed. Check the artifacts for detailed results.'
+            })

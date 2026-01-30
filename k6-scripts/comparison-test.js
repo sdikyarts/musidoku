@@ -22,8 +22,10 @@ export const options = {
 };
 
 export default function () {
+  const baseUrl = __ENV.BASE_URL || 'http://localhost:3000';
+  
   // Test baseline endpoint
-  const baselineUrl = 'http://localhost:3000/api/heavy-task';
+  const baselineUrl = `${baseUrl}/api/heavy-task`;
   const baselineResponse = http.get(baselineUrl);
   
   const baselineSuccess = check(baselineResponse, {
@@ -45,7 +47,7 @@ export default function () {
   sleep(0.5);
   
   // Test optimized endpoint
-  const optimizedUrl = 'http://localhost:3000/api/heavy-task-optimized';
+  const optimizedUrl = `${baseUrl}/api/heavy-task-optimized`;
   const optimizedResponse = http.get(optimizedUrl);
   
   const optimizedSuccess = check(optimizedResponse, {

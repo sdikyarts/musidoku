@@ -22,7 +22,8 @@ export const options = {
 };
 
 export default function () {
-  const url = 'http://localhost:3000/api/heavy-task';
+  const baseUrl = __ENV.BASE_URL || 'http://localhost:3000';
+  const url = `${baseUrl}/api/heavy-task`;
   
   const response = http.get(url);
   
