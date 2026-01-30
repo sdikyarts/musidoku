@@ -39,3 +39,19 @@ export const getGroupStatusLabel = (isDisbanded: boolean | null): string => {
     if (isDisbanded === null) return "-";
     return isDisbanded ? "Disbanded" : "Existing";
 };
+
+/**
+ * Converts a 0-indexed roster_order from the database to a 1-indexed display number.
+ * Database stores roster_order starting from 0, but we display it starting from 1.
+ * 
+ * @param rosterOrder - The roster_order value from the database (0-indexed, can be null)
+ * @returns The display number (1-indexed), defaults to 1 if rosterOrder is null
+ * 
+ * @example
+ * formatRosterNumber(0) // returns 1 (Drake is #1)
+ * formatRosterNumber(199) // returns 200
+ * formatRosterNumber(null) // returns 1
+ */
+export const formatRosterNumber = (rosterOrder: number | null | undefined): number => {
+    return (rosterOrder ?? 0) + 1;
+};
