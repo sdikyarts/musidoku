@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { GET } from "./route";
 import { NextRequest } from "next/server";
+import type { Artist } from "@/db/schema/artists";
 
 vi.mock("@/lib/artists/repo", () => ({
   getArtistBySpotifyId: vi.fn(),
@@ -14,13 +15,12 @@ describe("GET /api/artists/[spotifyId]", () => {
   });
 
   it("returns artist when found", async () => {
-    const mockArtist = {
-      id: 1,
+    const mockArtist: Partial<Artist> = {
       scraper_name: "Drake",
       spotify_id: "3TVXtAsR1Inumwj472S9r4",
       roster_order: 0,
     };
-    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtist as any);
+    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtist as Artist);
 
     const req = new NextRequest("http://localhost:3000/api/artists/3TVXtAsR1Inumwj472S9r4");
     const context = { params: Promise.resolve({ spotifyId: "3TVXtAsR1Inumwj472S9r4" }) };
@@ -55,12 +55,11 @@ describe("GET /api/artists/[spotifyId]", () => {
   });
 
   it("trims whitespace from spotify ID", async () => {
-    const mockArtist = {
-      id: 1,
+    const mockArtist: Partial<Artist> = {
       scraper_name: "Drake",
       spotify_id: "3TVXtAsR1Inumwj472S9r4",
     };
-    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtist as any);
+    vi.mocked(getArtistBySpotifyId).mockResolvedValue(mockArtist as Artist);
 
     const req = new NextRequest("http://localhost:3000/api/artists/3TVXtAsR1Inumwj472S9r4");
     const context = { params: Promise.resolve({ spotifyId: "  3TVXtAsR1Inumwj472S9r4  " }) };

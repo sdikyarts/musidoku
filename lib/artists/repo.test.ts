@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 
 // Create a proper mock for the db module
 const mockDb = {
-  select: vi.fn((fields?: any) => ({
+  select: vi.fn((fields?: Record<string, unknown>) => ({
     from: vi.fn(() => {
       // If select was called with fields (like getTotalArtistCount does), return array directly
       if (fields) {

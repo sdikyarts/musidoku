@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { GET } from "./route";
 import { NextRequest } from "next/server";
+import type { Artist } from "@/db/schema/artists";
 
 vi.mock("@/lib/artists/repo", () => ({
   listArtists: vi.fn(),
@@ -14,11 +15,11 @@ describe("GET /api/artists", () => {
   });
 
   it("returns artists with valid query parameters", async () => {
-    const mockArtists = [
-      { id: 1, scraper_name: "Drake", spotify_id: "3TVXtAsR1Inumwj472S9r4" },
-      { id: 2, scraper_name: "Taylor Swift", spotify_id: "06HL4z0CvFAxyc27GXpf02" },
+    const mockArtists: Partial<Artist>[] = [
+      { scraper_name: "Drake", spotify_id: "3TVXtAsR1Inumwj472S9r4" },
+      { scraper_name: "Taylor Swift", spotify_id: "06HL4z0CvFAxyc27GXpf02" },
     ];
-    vi.mocked(listArtists).mockResolvedValue(mockArtists as any);
+    vi.mocked(listArtists).mockResolvedValue(mockArtists as Artist[]);
 
     const req = new NextRequest("http://localhost:3000/api/artists?limit=10&offset=0");
     const response = await GET(req);
@@ -30,10 +31,10 @@ describe("GET /api/artists", () => {
   });
 
   it("returns artists with search query", async () => {
-    const mockArtists = [
-      { id: 1, scraper_name: "Drake", spotify_id: "3TVXtAsR1Inumwj472S9r4" },
+    const mockArtists: Partial<Artist>[] = [
+      { scraper_name: "Drake", spotify_id: "3TVXtAsR1Inumwj472S9r4" },
     ];
-    vi.mocked(listArtists).mockResolvedValue(mockArtists as any);
+    vi.mocked(listArtists).mockResolvedValue(mockArtists as Artist[]);
 
     const req = new NextRequest("http://localhost:3000/api/artists?q=Drake");
     const response = await GET(req);
@@ -63,8 +64,8 @@ describe("GET /api/artists", () => {
   });
 
   it("uses default values when no parameters provided", async () => {
-    const mockArtists = [];
-    vi.mocked(listArtists).mockResolvedValue(mockArtists as any);
+    const mockArtists: Artist[] = [];
+    vi.mocked(listArtists).mockResolvedValue(mockArtists);
 
     const req = new NextRequest("http://localhost:3000/api/artists");
     const response = await GET(req);
