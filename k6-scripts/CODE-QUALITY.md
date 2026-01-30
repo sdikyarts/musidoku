@@ -120,25 +120,30 @@ it('test B', () => {
 
 ## SonarQube Configuration
 
-If you want to suppress these warnings in SonarQube, add to `sonar-project.properties`:
+We've added `sonar-project.properties` to properly configure SonarQube for this project:
 
 ```properties
-# Exclude performance testing endpoints from security checks
-sonar.issue.ignore.multicriteria=e1,e2
+# Exclude test files from duplication checks
+sonar.cpd.exclusions=**/*.test.ts,**/*.test.tsx,k6-scripts/**
 
 # Ignore Math.random() warnings in demo endpoints
 sonar.issue.ignore.multicriteria.e1.ruleKey=javascript:S2245
 sonar.issue.ignore.multicriteria.e1.resourceKey=**/api/heavy-task*/**
-
-# Ignore duplication in test files and K6 scripts
-sonar.cpd.exclusions=**/*.test.ts,**/*.test.tsx,k6-scripts/**
 ```
 
-Or add inline comments:
+### In-Code Suppressions
+
+We've also added inline suppressions where appropriate:
+
 ```typescript
-// NOSONAR - Math.random() is safe for demo endpoints
+// eslint-disable-next-line sonarjs/pseudo-random -- Safe for demo/testing endpoint
 const targetIndex = Math.floor(Math.random() * allArtists.length);
 ```
+
+This tells SonarQube:
+1. **Why** the warning is being suppressed (demo endpoint)
+2. **What** rule is being suppressed (pseudo-random)
+3. **Where** it applies (specific line only)
 
 ---
 

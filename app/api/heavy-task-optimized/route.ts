@@ -79,7 +79,7 @@ export async function GET() {
   }
   
   // Pick a random artist to find similar ones
-  // Note: Math.random() is safe here - this is a demo/testing endpoint, not security-critical
+  // Math.random() is safe here: demo/testing endpoint, not security-critical (SonarQube S2245)
   const targetIndex = Math.floor(Math.random() * allArtists.length);
   const targetArtist = allArtists[targetIndex];
   
