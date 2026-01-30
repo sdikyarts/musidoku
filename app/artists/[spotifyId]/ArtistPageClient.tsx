@@ -82,7 +82,7 @@ function getPaginationTextStyle(screenWidth: number) {
   };
 }
 
-function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, screenWidth, isAbsolute = false }: PaginationProps) {
+function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, screenWidth, isAbsolute = false }: Readonly<PaginationProps>) {
   return (
     <div style={getPaginationContainerStyle(isAbsolute)}>
       <Link href={prevArtistId ? `/artists/${prevArtistId}` : "#"} style={getPaginationLinkStyle(!!prevArtistId)}>
@@ -98,7 +98,7 @@ function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalAr
   );
 }
 
-function ArtistInfo({ artist, titleFontSize, pillSize }: ArtistInfoProps) {
+function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProps>) {
   const isSolo = artist.parsed_artist_type === 'solo';
   const typeLabel = getArtistTypeLabel(artist.parsed_artist_type);
 
