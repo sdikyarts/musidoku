@@ -78,7 +78,8 @@ export async function GET() {
     return NextResponse.json({ error: "No artists found" }, { status: 404 });
   }
   
-  // Pick a random artist
+  // Pick a random artist to find similar ones
+  // Note: Math.random() is safe here - this is a demo/testing endpoint, not security-critical
   const targetIndex = Math.floor(Math.random() * allArtists.length);
   const targetArtist = allArtists[targetIndex];
   

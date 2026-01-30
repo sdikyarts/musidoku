@@ -79,6 +79,7 @@ export async function GET() {
   const allArtists = await db.select().from(artists);
   
   // Pick a random artist to find similar ones
+  // Note: Math.random() is safe here - this is a demo/testing endpoint, not security-critical
   const targetIndex = Math.floor(Math.random() * allArtists.length);
   const targetArtist = allArtists[targetIndex];
   
