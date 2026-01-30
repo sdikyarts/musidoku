@@ -10,6 +10,7 @@ export default function ResponsiveLayout({
   children: React.ReactNode;
 }>) {
   const [padding, setPadding] = useState(224);
+  const [screenWidth, setScreenWidth] = useState<number | null>(null);
   const pathname = usePathname();
   
   // Check if we're on an individual artist page
@@ -17,6 +18,8 @@ export default function ResponsiveLayout({
 
   useEffect(() => {
     const updatePadding = () => {
+      const width = globalThis.window.innerWidth;
+      setScreenWidth(width);
       let newPadding = calculateHorizontalPadding();
       // Cap padding at 160px for individual artist pages
       if (isArtistPage && newPadding > 160) {
@@ -30,9 +33,12 @@ export default function ResponsiveLayout({
     return () => globalThis.window.removeEventListener('resize', updatePadding);
   }, [isArtistPage]);
 
+  // Calculate top padding: 80px for narrow screens on artist page, otherwise 96px
+  const topPadding = isArtistPage && screenWidth !== null && screenWidth < 799 ? '84px' : '96px';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <div style={{ padding: `96px ${padding}px 36px ${padding}px`, flex: '1' }}>
+      <div style={{ padding: `${topPadding} ${padding}px 36px ${padding}px`, flex: '1' }}>
         {children}
       </div>
       <div 
