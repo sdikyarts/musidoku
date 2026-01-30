@@ -82,6 +82,19 @@ export function ArtistPagination({
   const { currentPage, totalPages, hasPrev, hasNext } =
     getPageInfo(totalArtists, searchParams.get("page"), pageSize);
   const searchQuery = searchParams.get("q");
+  const [screenWidth, setScreenWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    const updateScreenWidth = () => {
+      if (globalThis.window !== undefined) {
+        setScreenWidth(globalThis.window.innerWidth);
+      }
+    };
+    
+    updateScreenWidth();
+    globalThis.window.addEventListener('resize', updateScreenWidth);
+    return () => globalThis.window.removeEventListener('resize', updateScreenWidth);
+  }, []);
 
   const buildHref = (pageNumber: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -104,6 +117,10 @@ export function ArtistPagination({
 
   const prevHref = hasPrev ? buildHref(currentPage - 1) : undefined;
   const nextHref = hasNext ? buildHref(currentPage + 1) : undefined;
+  
+  // Responsive font sizes
+  const buttonFontSize = screenWidth && screenWidth < 799 ? "14px" : "16px";
+  const pageFontSize = screenWidth && screenWidth < 799 ? "13px" : "14px";
 
   return (
     <div
@@ -130,6 +147,7 @@ export function ArtistPagination({
           color: "#051411",
           textDecoration: "none",
           fontWeight: 550,
+          fontSize: buttonFontSize,
         }}
       >
         Prev
@@ -138,7 +156,7 @@ export function ArtistPagination({
         style={{
           color: "#404B49",
           fontWeight: 550,
-          fontSize: "14px",
+          fontSize: pageFontSize,
         }}
       >
         Page {currentPage} of {totalPages}
@@ -155,6 +173,7 @@ export function ArtistPagination({
           color: "#051411",
           textDecoration: "none",
           fontWeight: 550,
+          fontSize: buttonFontSize,
         }}
       >
         Next
@@ -166,6 +185,7 @@ export function ArtistPagination({
 export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'> }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
+  const [cardSize, setCardSize] = useState<number>(200);
   
   const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
@@ -184,7 +204,11 @@ export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: R
       if (globalThis.window === undefined) return;
       
       const screenWidth = globalThis.window.innerWidth;
-      const cardWidth = 200;
+      
+      // Use smaller card size for narrow screens
+      const currentCardSize = screenWidth < 500 ? 160 : 200;
+      setCardSize(currentCardSize);
+      
       const gap = 24;
       
       // Calculate padding based on screen width (same logic as shared utility)
@@ -194,7 +218,7 @@ export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: R
       const availableWidth = screenWidth - (padding * 2);
       
       // Calculate how many cards can fit, minimum 2
-      const maxCardsPerRow = Math.max(2, Math.floor((availableWidth + gap) / (cardWidth + gap)));
+      const maxCardsPerRow = Math.max(2, Math.floor((availableWidth + gap) / (currentCardSize + gap)));
       
       setMaxColumns(maxCardsPerRow);
     };
@@ -213,14 +237,14 @@ export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: R
     <div 
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${maxColumns}, 200px)`,
+        gridTemplateColumns: `repeat(${maxColumns}, ${cardSize}px)`,
         gap: "24px",
         justifyContent: "center",
         width: "100%",
       }}
     >
       {pageArtists.map((artist) => (
-        <ArtistCard key={artist.id} id={artist.id} name={artist.name} imageUrl={artist.imageUrl} />
+        <ArtistCard key={artist.id} id={artist.id} name={artist.name} imageUrl={artist.imageUrl} cardSize={cardSize} />
       ))}
     </div>
   );
