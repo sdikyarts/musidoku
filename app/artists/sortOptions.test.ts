@@ -67,9 +67,9 @@ describe("sortArtists", () => {
   it("sorts artists by debut year descending", () => {
     const result = sortArtists(mockArtists, "debut-desc");
     expect(result[0].name).toBe("Adele");
-    expect(result[result.length - 2].name).toBe("The Beatles");
+    expect(result.at(-2)?.name).toBe("The Beatles");
     // Null values should be last
-    expect(result[result.length - 1].name).toBe("Unknown Artist");
+    expect(result.at(-1)?.name).toBe("Unknown Artist");
   });
 
   it("uses default sort for invalid sort value", () => {
