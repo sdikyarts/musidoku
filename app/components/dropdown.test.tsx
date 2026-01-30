@@ -4,8 +4,8 @@ import Dropdown from "./dropdown";
 
 describe("Dropdown", () => {
   beforeEach(() => {
-    // Mock window.innerWidth
-    Object.defineProperty(window, "innerWidth", {
+    // Mock globalThis.window.innerWidth
+    Object.defineProperty(globalThis.window, "innerWidth", {
       writable: true,
       configurable: true,
       value: 1024,
@@ -74,13 +74,13 @@ describe("Dropdown", () => {
   });
 
   it("shows label on wide screens", () => {
-    Object.defineProperty(window, "innerWidth", { value: 1024 });
+    Object.defineProperty(globalThis.window, "innerWidth", { value: 1024 });
     render(<Dropdown label="Wide Screen" />);
     expect(screen.getByText("Wide Screen")).toBeInTheDocument();
   });
 
   it("always shows label when alwaysShowLabel is true", () => {
-    Object.defineProperty(window, "innerWidth", { value: 800 });
+    Object.defineProperty(globalThis.window, "innerWidth", { value: 800 });
     render(<Dropdown label="Always Visible" alwaysShowLabel />);
     expect(screen.getByText("Always Visible")).toBeInTheDocument();
   });
