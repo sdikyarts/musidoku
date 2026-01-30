@@ -37,3 +37,26 @@ export async function getArtistBySpotifyId(spotifyId: string) {
   const rows = await db.select().from(artists).where(eq(artists.spotify_id, trimmedId)).limit(1);
   return rows[0] ?? null;
 }
+
+export async function getTotalArtistCount() {
+  const result = await db.select({ count: artists.roster_order }).from(artists);
+  return result.length;
+}
+
+export async function getPreviousArtist(currentRosterOrder: number) {
+  const rows = await db
+    .select()
+    .from(artists)
+    .where(eq(artists.roster_order, currentRosterOrder - 1))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getNextArtist(currentRosterOrder: number) {
+  const rows = await db
+    .select()
+    .from(artists)
+    .where(eq(artists.roster_order, currentRosterOrder + 1))
+    .limit(1);
+  return rows[0] ?? null;
+}

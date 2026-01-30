@@ -5,28 +5,31 @@ type ArtistCardProps = {
   id: string;
   name: string;
   imageUrl?: string | null;
+  cardSize?: number;
 };
 
-export default function ArtistCard({ id, name, imageUrl }: Readonly<ArtistCardProps>) {
+export default function ArtistCard({ id, name, imageUrl, cardSize = 200 }: Readonly<ArtistCardProps>) {
   const background = imageUrl ? `url(${imageUrl}) center / cover no-repeat` : "lightgray";
+  const fontSize = cardSize < 200 ? "14px" : "16px";
+  const gap = cardSize < 200 ? "8px" : "12px";
 
   return (
     <Link
       href={`/artists/${id}`}
       style={{
         display: "flex",
-        width: "200px",
+        width: `${cardSize}px`,
         borderRadius: "6px",
         flexDirection: "column",
         alignItems: "flex-start",
-        gap: "12px",
+        gap,
         textDecoration: "none",
         cursor: "pointer",
       }}
     >
       <div
         style={{
-          width: "200px",
+          width: `${cardSize}px`,
           aspectRatio: "1",
           background,
           flexShrink: "0",
@@ -39,7 +42,7 @@ export default function ArtistCard({ id, name, imageUrl }: Readonly<ArtistCardPr
           borderRadius: "6px",
           justifyContent: "space-between",
           alignItems: "center",
-          width: "200px",
+          width: `${cardSize}px`,
           gap: "8px",
         }}
       >
@@ -48,7 +51,7 @@ export default function ArtistCard({ id, name, imageUrl }: Readonly<ArtistCardPr
             width: "100%",
             color: "var(--Colors-Text-Primary, #051411)",
             fontFamily: "Inter",
-            fontSize: "16px",
+            fontSize,
             fontStyle: "normal",
             fontWeight: "700",
             lineHeight: "normal",
