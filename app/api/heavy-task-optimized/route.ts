@@ -79,8 +79,8 @@ export async function GET() {
   }
   
   // Pick a random artist to find similar ones
-  // Math.random() is safe here: demo/testing endpoint, not security-critical (SonarQube S2245)
-  const targetIndex = Math.floor(Math.random() * allArtists.length);
+  // Math.random() is safe here: demo/testing endpoint, not security-critical
+  const targetIndex = Math.floor(Math.random() * allArtists.length); // NOSONAR S2245
   const targetArtist = allArtists[targetIndex];
   
   // OPTIMIZATION 2: Filter by primary genre in memory (fast for small datasets)

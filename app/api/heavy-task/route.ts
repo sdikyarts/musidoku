@@ -38,7 +38,7 @@ function levenshteinDistance(str1: string, str2: string): number {
   const n = str2.length;
   
   // INEFFICIENT: Creating full matrix without optimization
-  const dp: number[][] = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+  const dp: number[][] = new Array(m + 1).fill(0).map(() => new Array(n + 1).fill(0));
   
   for (let i = 0; i <= m; i++) {
     dp[i][0] = i;
@@ -79,8 +79,8 @@ export async function GET() {
   const allArtists = await db.select().from(artists);
   
   // Pick a random artist to find similar ones
-  // Math.random() is safe here: demo/testing endpoint, not security-critical (SonarQube S2245)
-  const targetIndex = Math.floor(Math.random() * allArtists.length);
+  // Math.random() is safe here: demo/testing endpoint, not security-critical
+  const targetIndex = Math.floor(Math.random() * allArtists.length); // NOSONAR S2245
   const targetArtist = allArtists[targetIndex];
   
   // INEFFICIENT: Compare target artist with ALL other artists
