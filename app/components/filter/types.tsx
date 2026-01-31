@@ -7,6 +7,7 @@ import PersonIcon from "../icons/Person";
 import GroupIcon from "../icons/Group";
 import DropdownContainer from "../shared/DropdownContainer";
 import { TYPE_OPTIONS, type ArtistTypeValue } from "../../artists/filter/typeOptions";
+import { getTypeColors } from "@/lib/artists/type-colors";
 
 type Props = {
     selectedTypes: ArtistTypeValue[];
@@ -25,11 +26,6 @@ export default function FilterArtistType({
     onClickOutside,
     triggerRef,
 }: Readonly<Props>) {
-    const iconByType: Record<ArtistTypeValue, React.ReactNode> = {
-        solo: <PersonIcon />,
-        group: <GroupIcon />,
-    };
-
     return (
         <DropdownContainer
             visible={visible}
@@ -47,16 +43,27 @@ export default function FilterArtistType({
                     flexWrap: "wrap",
                 }}
             >
-                {TYPE_OPTIONS.map((option) => (
-                    <li key={option.value}>
-                        <ChoicePill
-                            label={option.label}
-                            icon={iconByType[option.value as ArtistTypeValue]}
-                            selected={selectedTypes.includes(option.value as ArtistTypeValue)}
-                            onClick={() => onToggleType(option.value as ArtistTypeValue)}
-                        />
-                    </li>
-                ))}
+                {TYPE_OPTIONS.map((option) => {
+                    const isSelected = selectedTypes.includes(option.value as ArtistTypeValue);
+                    const colors = getTypeColors(option.value as ArtistTypeValue, isSelected);
+                    const iconColor = colors.textColor;
+                    
+                    return (
+                        <li key={option.value}>
+                            <ChoicePill
+                                label={option.label}
+                                icon={option.value === "solo" ? <PersonIcon color={iconColor} /> : <GroupIcon color={iconColor} />}
+                                selectedIcon={option.value === "solo" ? <PersonIcon color={colors.textColor} /> : <GroupIcon color={colors.textColor} />}
+                                selected={isSelected}
+                                backgroundColor={colors.backgroundColor}
+                                selectedBackgroundColor={colors.backgroundColor}
+                                textColor={colors.textColor}
+                                selectedTextColor={colors.textColor}
+                                onClick={() => onToggleType(option.value as ArtistTypeValue)}
+                            />
+                        </li>
+                    );
+                })}
             </div>
         </DropdownContainer>
     );

@@ -22,16 +22,25 @@ export default function DropdownContainer({
 
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (!containerRef.current) return;
-      if (
-        event.target instanceof Node &&
-        (containerRef.current.contains(event.target) ||
-          triggerRef?.current?.contains(event.target))
-      ) {
+      
+      const target = event.target as Node;
+      
+      // If clicking inside the dropdown container, don't close
+      if (containerRef.current.contains(target)) {
         return;
       }
+      
+      // If clicking the trigger button, don't call onClickOutside
+      // The trigger's onClick will handle the toggle
+      if (triggerRef?.current?.contains(target)) {
+        return;
+      }
+      
+      // Otherwise, close the dropdown
       onClickOutside?.();
     };
 
+    // Use mousedown/touchstart to catch the event before onClick
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
     return () => {

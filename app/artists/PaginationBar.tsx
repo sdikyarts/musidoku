@@ -10,16 +10,22 @@ type Props = {
   pageSize: number;
   selectedTypes?: Array<'solo' | 'group'>;
   selectedMisc?: Array<'deceased' | 'disbanded'>;
+  selectedCountries?: string[];
+  selectedGenres?: string[];
+  debutStartYear?: number | null;
+  debutEndYear?: number | null;
+  birthStartYear?: number | null;
+  birthEndYear?: number | null;
 };
 
 // Hides the pagination when scrolling down and reveals it when scrolling up
-export default function PaginationBar({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<Props>) {
+export default function PaginationBar({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear }: Readonly<Props>) {
   const [hidden, setHidden] = useState(false);
   const lastYRef = useRef<number>(0);
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tickingRef = useRef<boolean>(false);
   const searchParams = useSearchParams();
-  const filteredTotal = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc).length;
+  const filteredTotal = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear).length;
 
   const clearIdleTimeout = useCallback(() => {
     if (idleTimeoutRef.current) {

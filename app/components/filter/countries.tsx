@@ -1,15 +1,19 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import ChoicePill from "../pills/choice";
 import ChooseHeader from "./chooseheader";
-import GlobeIcon from "../icons/Globe";
 import DropdownContainer from "../shared/DropdownContainer";
+import { getLighterBackground, getDarkerText } from "@/lib/artists/country-colors";
 
 type CountryOption = {
     code: string;
     name: string;
+    emoji: string;
+    accentColor: string;
 };
+
+export type { CountryOption };
 
 type Props = {
     selectedCountries: string[];
@@ -19,6 +23,7 @@ type Props = {
     onMouseLeave?: () => void;
     onClickOutside?: () => void;
     triggerRef?: React.RefObject<HTMLElement | null>;
+    countries: CountryOption[];
 };
 
 export default function FilterCountries({
@@ -27,107 +32,63 @@ export default function FilterCountries({
     onToggleCountry,
     onClickOutside,
     triggerRef,
+    countries,
 }: Readonly<Props>) {
-    const hasFetched = useRef(false);
-    const [countries, setCountries] = useState<CountryOption[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!visible || hasFetched.current) return;
-        const controller = new AbortController();
-        const fetchCountries = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const response = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2", {
-                    signal: controller.signal,
-                });
-                if (!response.ok) {
-                    throw new Error("Failed to load countries");
-                }
-                const data: Array<{ name?: { common?: string }; cca2?: string }> = await response.json();
-                const mapped = data
-                    .filter((item) => item.name?.common && item.cca2)
-                    .map((item) => ({
-                        code: item.cca2 as string,
-                        name: item.name?.common as string,
-                    }))
-                    .sort((a, b) => a.name.localeCompare(b.name));
-                setCountries(mapped);
-                hasFetched.current = true;
-            } catch (err) {
-                if (controller.signal.aborted) return;
-                const message = err instanceof Error ? err.message : "Failed to load countries";
-                setError(message);
-            } finally {
-                if (!controller.signal.aborted) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchCountries();
-        return () => controller.abort();
-    }, [visible]);
-
     return (
         <DropdownContainer
             visible={visible}
             onClickOutside={onClickOutside}
             triggerRef={triggerRef}
+            minWidth="400px"
         >
             <ChooseHeader choose="Country" />
-            {loading && (
-                <p
-                    style={{
-                        margin: 0,
-                        color: "#6D7FD9",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                    }}
-                >
-                    Loading countries...
-                </p>
-            )}
-            {error && !loading && (
-                <p
-                    style={{
-                        margin: 0,
-                        color: "#D14343",
-                        fontSize: "14px",
-                        fontWeight: 500,
-                    }}
-                >
-                    {error}
-                </p>
-            )}
-            {!loading && !error && (
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        alignContent: "flex-start",
-                        gap: "8px",
-                        alignSelf: "stretch",
-                        flexWrap: "wrap",
-                        maxHeight: "320px",
-                        overflowY: "auto",
-                        paddingRight: "4px",
-                    }}
-                >
-                    {countries.map((country) => (
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    alignContent: "flex-start",
+                    gap: "8px",
+                    alignSelf: "stretch",
+                    flexWrap: "wrap",
+                    maxHeight: "320px",
+                    overflowY: "auto",
+                    paddingRight: "4px",
+                }}
+            >
+                {countries.map((country) => {
+                    const isSelected = selectedCountries.includes(country.code);
+                    const backgroundColor = isSelected 
+                        ? country.accentColor 
+                        : getLighterBackground(country.accentColor);
+                    const textColor = isSelected 
+                        ? "#F3FDFB" 
+                        : getDarkerText(country.accentColor);
+                    
+                    return (
                         <li key={country.code} style={{ listStyle: "none" }}>
                             <ChoicePill
                                 label={country.name}
-                                icon={<GlobeIcon />}
-                                selected={selectedCountries.includes(country.code)}
+                                icon={
+                                    <span style={{ fontSize: "20px", lineHeight: 1 }}>
+                                        {country.emoji}
+                                    </span>
+                                }
+                                selectedIcon={
+                                    <span style={{ fontSize: "20px", lineHeight: 1 }}>
+                                        {country.emoji}
+                                    </span>
+                                }
+                                selected={isSelected}
+                                backgroundColor={backgroundColor}
+                                selectedBackgroundColor={country.accentColor}
+                                textColor={textColor}
+                                selectedTextColor="#F3FDFB"
                                 onClick={() => onToggleCountry(country.code)}
                             />
                         </li>
-                    ))}
-                </div>
-            )}
+                    );
+                })}
+            </div>
         </DropdownContainer>
     );
 }

@@ -15,6 +15,10 @@ export type Artist = {
   type?: 'solo' | 'group' | 'unknown' | null;
   isDead?: boolean | null;
   isDisbanded?: boolean | null;
+  country?: string | null;
+  primaryGenre?: string | null;
+  secondaryGenre?: string | null;
+  birthDate?: string | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -42,6 +46,12 @@ export function filterArtists(
   queryParam: string | null,
   selectedTypes?: Array<'solo' | 'group'>,
   selectedMisc?: Array<'deceased' | 'disbanded'>,
+  selectedCountries?: string[],
+  selectedGenres?: string[],
+  debutStartYear?: number | null,
+  debutEndYear?: number | null,
+  birthStartYear?: number | null,
+  birthEndYear?: number | null,
 ): Artist[] {
   let filtered = artists;
   
@@ -68,6 +78,54 @@ export function filterArtists(
         if (misc === 'disbanded') return artist.isDisbanded === true;
         return false;
       });
+    });
+  }
+  
+  // Filter by countries
+  if (selectedCountries && selectedCountries.length > 0) {
+    filtered = filtered.filter((artist) => 
+      artist.country && selectedCountries.includes(artist.country)
+    );
+  }
+  
+  // Filter by genres (match primary or secondary genre)
+  if (selectedGenres && selectedGenres.length > 0) {
+    filtered = filtered.filter((artist) => 
+      selectedGenres.some(genre => 
+        artist.primaryGenre === genre || artist.secondaryGenre === genre
+      )
+    );
+  }
+  
+  // Filter by debut year range
+  if (debutStartYear !== null && debutStartYear !== undefined && debutEndYear !== null && debutEndYear !== undefined) {
+    filtered = filtered.filter((artist) => 
+      artist.debutYear !== null && 
+      artist.debutYear !== undefined && 
+      artist.debutYear >= debutStartYear && 
+      artist.debutYear <= debutEndYear
+    );
+  }
+  
+  // Filter by birth year range (for solo artists only)
+  if (birthStartYear !== null && birthStartYear !== undefined && birthEndYear !== null && birthEndYear !== undefined) {
+    filtered = filtered.filter((artist) => {
+      // Birth year filtering only applies to solo artists
+      if (artist.type !== 'solo') {
+        return false;
+      }
+      
+      // Extract year from birth_date (format: YYYY-MM-DD)
+      if (!artist.birthDate) {
+        return false;
+      }
+      
+      const birthYear = Number.parseInt(artist.birthDate.substring(0, 4), 10);
+      if (Number.isNaN(birthYear)) {
+        return false;
+      }
+      
+      return birthYear >= birthStartYear && birthYear <= birthEndYear;
     });
   }
   
@@ -182,12 +240,12 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'> }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'>; selectedCountries?: string[]; selectedGenres?: string[]; debutStartYear?: number | null; debutEndYear?: number | null; birthStartYear?: number | null; birthEndYear?: number | null }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
   const [cardSize, setCardSize] = useState<number>(200);
   
-  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc);
+  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
   const { startIndex } = getPageInfo(
     sortedArtists.length,
