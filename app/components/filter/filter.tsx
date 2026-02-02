@@ -117,17 +117,51 @@ const getMiscButtonStyles = (isSelected: boolean, misc?: 'deceased' | 'disbanded
     };
 };
 
-const getContainerStyles = (isCentered: boolean, padding: number): React.CSSProperties => ({
-    position: isCentered ? "fixed" : "absolute",
-    top: isCentered ? "50%" : "calc(100% + 8px)",
-    left: isCentered ? `${padding}px` : "auto",
-    right: isCentered ? `${padding}px` : 0,
-    transform: isCentered ? "translateY(-50%)" : "none",
-    width: isCentered ? "auto" : "100%",
-    minWidth: isCentered ? "452px" : "800px",
-    maxWidth: isCentered ? "959px" : "none",
-    maxHeight: isCentered ? "min(60vh, 600px)" : "none",
-});
+const getContainerStyles = (isCentered: boolean, padding: number, screenWidth: number): React.CSSProperties => {
+    // For non-centered (wide screen) mode
+    if (!isCentered) {
+        // Between 960px and 992px, calculate width to match navbar padding
+        if (screenWidth >= 960 && screenWidth < 992) {
+            const calculatedWidth = screenWidth - (padding * 2);
+            return {
+                position: "absolute",
+                top: "calc(100% + 8px)",
+                left: "auto",
+                right: 0,
+                transform: "none",
+                width: `${calculatedWidth}px`,
+                minWidth: "auto",
+                maxWidth: "none",
+                maxHeight: "80vh",
+            };
+        }
+        
+        // 992px and above, use fixed 800px width
+        return {
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            left: "auto",
+            right: 0,
+            transform: "none",
+            width: "100%",
+            minWidth: "800px",
+            maxWidth: "none",
+            maxHeight: "80vh",
+        };
+    }
+    
+    // Centered popup mode (narrow screens) - center to screen height below navbar (64px)
+    return {
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, calc(-50% + 48px))",
+        width: `calc(100vw - ${padding * 2}px)`,
+        minWidth: "452px",
+        maxWidth: "959px",
+        maxHeight: "calc(80vh - 64px)",
+    };
+};
 
 function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange, selectedCountries = [], onCountriesChange, countryData = [], selectedGenres = [], onGenresChange, genreData = [], debutStartYear, debutEndYear, onDebutStartYearChange = () => {}, onDebutEndYearChange = () => {}, birthStartYear, birthEndYear, onBirthStartYearChange = () => {}, onBirthEndYearChange = () => {} }: Readonly<FilterArtistContentProps>) {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -140,6 +174,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
     const [openYearPicker, setOpenYearPicker] = useState<'debutStart' | 'debutEnd' | 'birthStart' | 'birthEnd' | null>(null);
     const [isCenteredPopup, setIsCenteredPopup] = useState(false);
     const [horizontalPadding, setHorizontalPadding] = useState(24);
+    const [screenWidth, setScreenWidth] = useState(1024);
 
     const handleToggleType = (type: ArtistTypeValue) => {
         const newTypes = selectedTypes.includes(type) 
@@ -234,6 +269,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
         const checkScreenWidth = () => {
             if (globalThis.window === undefined) return;
             const width = globalThis.window.innerWidth;
+            setScreenWidth(width);
             setIsCenteredPopup(width <= 959);
             setHorizontalPadding(calculateHorizontalPadding(width));
         };
@@ -263,7 +299,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
         };
     }, [onClickOutside, triggerRef]);
 
-    const containerStyles = getContainerStyles(isCenteredPopup, horizontalPadding);
+    const containerStyles = getContainerStyles(isCenteredPopup, horizontalPadding, screenWidth);
     const typeButtonStyles = getTypeButtonStyles(selectedTypes.length > 0);
     const countryButtonStyles = getTypeButtonStyles(selectedCountries.length > 0);
     const genreButtonStyles = getTypeButtonStyles(selectedGenres.length > 0);
@@ -291,8 +327,34 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                     onClick={onClickOutside}
                 />
             )}
+            <style>{`
+                .filter-popup-container,
+                .filter-popup-container *,
+                .filter-popup-container::before,
+                .filter-popup-container::after,
+                .filter-popup-container *::before,
+                .filter-popup-container *::after {
+                    border-top-color: transparent !important;
+                    border-bottom-color: transparent !important;
+                    border-left-color: transparent !important;
+                    border-right-color: transparent !important;
+                }
+                
+                .filter-popup-container {
+                    overflow: hidden !important;
+                }
+                
+                .filter-popup-container::before,
+                .filter-popup-container::after {
+                    display: none !important;
+                    content: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                }
+            `}</style>
             <div
                 ref={containerRef}
+                className="filter-popup-container"
                 style={{
                     ...containerStyles,
                     padding: "16px",
@@ -316,7 +378,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                     alignSelf: "stretch",
                     gap: "24px",
                     width: "100%",
-                    maxHeight: isCenteredPopup ? "min(60vh, 600px)" : "558.5px",
+                    maxHeight: screenWidth <= 653 ? "calc(80vh - 64px - 76px)" : "calc(80vh - 64px - 32px)",
                     overflowY: "auto",
                     overflowX: "visible",
                 }}
@@ -539,7 +601,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     alignItems: "center",
                                     alignContent: "center",
                                     gap: "16px",
-                                    flexWrap: "wrap",
+                                    flexWrap: screenWidth <= 653 ? "wrap" : "nowrap",
                                 }}
                             >
                                 <div
@@ -547,8 +609,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         display: "flex",
                                         alignItems: "flex-start",
                                         gap: "16px",
-                                        width: "100%",
-                                        
+                                        width: screenWidth <= 653 ? "100%" : "auto",
+                                        flexWrap: screenWidth <= 653 ? "wrap" : "nowrap",
                                     }}
                                 >
                                     <div
@@ -565,6 +627,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             backgroundColor={typeButtonStyles.backgroundColor}
                                             label="Artist Type"
                                             alwaysShowLabel={true}
+                                            width="178px"
+                                            chevronDirection={screenWidth < 960 ? 'right' : 'down'}
                                             onClick={handleOpenTypeDropdown}
                                         />
                                         <div
@@ -598,6 +662,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             backgroundColor={countryButtonStyles.backgroundColor}
                                             label="Country"
                                             alwaysShowLabel={true}
+                                            chevronDirection={screenWidth < 960 ? 'right' : 'down'}
                                             onClick={handleOpenCountryDropdown}
                                         />
                                         <div
@@ -632,6 +697,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             backgroundColor={genreButtonStyles.backgroundColor}
                                             label="Genre"
                                             alwaysShowLabel={true}
+                                            chevronDirection={screenWidth < 960 ? 'right' : 'down'}
                                             onClick={handleOpenGenreDropdown}
                                         />
                                         <div
@@ -660,9 +726,10 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                 display: "flex",
                                 flexDirection: "row",
                                 alignItems: "flex-start",
-                                justifyContent: "space-between",
-                                gap: "24px",
+                                justifyContent: "flex-start",
+                                gap: "48px",
                                 flexWrap: "wrap",
+                                width: "100%",
                             }}
                         >
                             <div
@@ -672,8 +739,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     alignItems: "flex-start",
                                     justifyContent: "center",
                                     gap: "12px",
-                                    flex: "1 1 auto",
-                                    minWidth: "300px",
+                                    flex: "1 1 0",
+                                    minWidth: screenWidth <= 839 ? "100%" : "250px",
                                 }}
                             >
                                 <p
@@ -694,13 +761,13 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         alignItems: "center",
                                         alignContent: "center",
                                         gap: "16px",
-                                        flexWrap: "wrap",
+                                        flexWrap: "nowrap",
                                     }}
                                 >
                                     <YearPicker
                                         selectedYear={debutStartYear}
                                         onChange={onDebutStartYearChange}
-                                        label="Start Year"
+                                        label="Start"
                                         minYear={1900}
                                         maxYear={new Date().getFullYear()}
                                         isOpen={openYearPicker === 'debutStart'}
@@ -728,7 +795,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     <YearPicker
                                         selectedYear={debutEndYear}
                                         onChange={onDebutEndYearChange}
-                                        label="End Year"
+                                        label="End"
                                         minYear={debutStartYear || 1900}
                                         maxYear={new Date().getFullYear()}
                                         isOpen={openYearPicker === 'debutEnd'}
@@ -751,8 +818,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     alignItems: "flex-start",
                                     justifyContent: "center",
                                     gap: "12px",
-                                    flex: "1 1 auto",
-                                    minWidth: "300px",
+                                    flex: "1 1 0",
+                                    minWidth: screenWidth <= 839 ? "100%" : "250px",
                                 }}
                             >
                                 <p
@@ -773,13 +840,13 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         alignItems: "center",
                                         alignContent: "center",
                                         gap: "16px",
-                                        flexWrap: "wrap",
+                                        flexWrap: "nowrap",
                                     }}
                                 >
                                     <YearPicker
                                         selectedYear={birthStartYear}
                                         onChange={onBirthStartYearChange}
-                                        label="Start Year"
+                                        label="Start"
                                         minYear={1900}
                                         maxYear={new Date().getFullYear()}
                                         isOpen={openYearPicker === 'birthStart'}
@@ -808,7 +875,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     <YearPicker
                                         selectedYear={birthEndYear}
                                         onChange={onBirthEndYearChange}
-                                        label="End Year"
+                                        label="End"
                                         minYear={birthStartYear || 1900}
                                         maxYear={new Date().getFullYear()}
                                         isOpen={openYearPicker === 'birthEnd'}

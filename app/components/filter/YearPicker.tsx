@@ -7,6 +7,7 @@ import CalendarClock from "../icons/CalendarClock";
 import ArrowDownIcon from "../icons/ArrowDown";
 import ChevronLeftIcon from "../icons/ChevronLeft";
 import ChevronRightIcon from "../icons/ChevronRight";
+import { calculateHorizontalPadding } from "@/lib/layout/padding";
 
 type YearPickerProps = {
   selectedYear?: number | null;
@@ -27,11 +28,13 @@ const CustomInput = forwardRef<HTMLButtonElement, {
   isActive?: boolean;
   activeColor?: string;
   icon?: React.ReactNode;
-}>(function CustomInput({ value, onClick, label, isActive = false, activeColor = "#6D7FD9", icon }, ref) {
+  screenWidth?: number;
+}>(function CustomInput({ value, onClick, label, isActive = false, activeColor = "#6D7FD9", icon, screenWidth = 1024 }, ref) {
   const displayText = value || label;
   const backgroundColor = isActive ? activeColor : "#E5F4F8";
   const textColor = isActive ? "#F3FDFB" : "#051411";
   const iconColor = isActive ? "#F3FDFB" : "#051411";
+  const showChevronRight = screenWidth < 960;
   
   return (
     <button
@@ -88,7 +91,11 @@ const CustomInput = forwardRef<HTMLButtonElement, {
           gap: "12px",
         }}
       >
-        <ArrowDownIcon color={iconColor} />
+        {showChevronRight ? (
+          <ChevronRightIcon color={iconColor} size={20} />
+        ) : (
+          <ArrowDownIcon color={iconColor} />
+        )}
       </div>
     </button>
   );
@@ -107,6 +114,10 @@ export default function YearPicker({
 }: Readonly<YearPickerProps>) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [currentYearRange, setCurrentYearRange] = useState<{ start: number; end: number } | null>(null);
+  const [screenWidth, setScreenWidth] = useState(
+    globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
+  );
+  const [horizontalPadding, setHorizontalPadding] = useState(24);
   const observerRef = useRef<MutationObserver | null>(null);
   
   // Use external control if provided, otherwise use internal state
@@ -114,6 +125,20 @@ export default function YearPicker({
   
   const selectedDate = selectedYear ? new Date(selectedYear, 0, 1) : null;
   const currentYear = new Date().getFullYear();
+  const isCenteredPopup = screenWidth < 960;
+
+  useEffect(() => {
+    const checkScreenWidth = () => {
+      if (globalThis.window === undefined) return;
+      const width = globalThis.window.innerWidth;
+      setScreenWidth(width);
+      setHorizontalPadding(calculateHorizontalPadding(width));
+    };
+    
+    checkScreenWidth();
+    globalThis.window.addEventListener('resize', checkScreenWidth);
+    return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+  }, []);
 
   const handleChange = (date: Date | null) => {
     if (date) {
@@ -204,7 +229,15 @@ export default function YearPicker({
     <div style={{ position: "relative" }}>
       <style>{`
         .year-picker-wrapper .react-datepicker-popper {
-          z-index: 99999 !important;
+          z-index: ${isCenteredPopup ? '10002' : '99999'} !important;
+          ${isCenteredPopup ? `
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, calc(-50% + 48px)) !important;
+            width: calc(100vw - ${horizontalPadding * 2}px) !important;
+            max-width: 600px !important;
+          ` : ''}
         }
         
         .year-picker-wrapper .react-datepicker {
@@ -212,9 +245,10 @@ export default function YearPicker({
           background-color: #E5F4F8;
           border: none;
           border-radius: 6px;
-          box-shadow: 0 5px 4px 0 rgba(0, 0, 0, 0.15);
+          box-shadow: ${isCenteredPopup ? '0 12px 24px rgba(0, 0, 0, 0.0875)' : '0 5px 4px 0 rgba(0, 0, 0, 0.15)'};
           padding: 16px;
-          z-index: 99999;
+          z-index: ${isCenteredPopup ? '10002' : '99999'};
+          ${isCenteredPopup ? 'width: 100% !important;' : ''}
         }
         
         .year-picker-wrapper .react-datepicker__header {
@@ -247,26 +281,26 @@ export default function YearPicker({
         .year-picker-wrapper .react-datepicker__year-wrapper {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 8px;
-          max-width: 280px;
+          gap: ${isCenteredPopup ? '12px' : '8px'};
+          max-width: ${isCenteredPopup ? '100%' : '280px'};
           margin: 0;
           padding: 0;
         }
         
         .year-picker-wrapper .react-datepicker__year-text {
-          width: 60px;
-          height: 36px;
+          width: ${isCenteredPopup ? '100%' : '60px'};
+          height: ${isCenteredPopup ? '68px' : '36px'};
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 4px;
           background-color: #C2D4ED;
           color: #051411;
-          font-size: 14px;
+          font-size: ${isCenteredPopup ? '16px' : '14px'};
           font-weight: 550;
           cursor: pointer;
           margin: 0;
-          line-height: 36px;
+          line-height: ${isCenteredPopup ? '68px' : '36px'};
         }
         
         .year-picker-wrapper .react-datepicker__year-text:hover {
@@ -315,7 +349,32 @@ export default function YearPicker({
         }
         
         .year-picker-wrapper .react-datepicker__triangle {
-          display: none;
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        
+        .year-picker-wrapper .react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle,
+        .year-picker-wrapper .react-datepicker-popper[data-placement^="top"] .react-datepicker__triangle {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        
+        .year-picker-wrapper .react-datepicker-popper::before,
+        .year-picker-wrapper .react-datepicker-popper::after,
+        .year-picker-wrapper .react-datepicker::before,
+        .year-picker-wrapper .react-datepicker::after {
+          display: none !important;
+          content: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
         }
       `}</style>
       
@@ -332,7 +391,7 @@ export default function YearPicker({
             // Only allow years up to current year
             return date.getFullYear() <= currentYear;
           }}
-          customInput={<CustomInput label={label} isActive={selectedYear !== null && selectedYear !== undefined} activeColor={activeColor} icon={icon} />}
+          customInput={<CustomInput label={label} isActive={selectedYear !== null && selectedYear !== undefined} activeColor={activeColor} icon={icon} screenWidth={screenWidth} />}
           open={isOpen}
           onInputClick={() => {
             if (onOpenChange) {
@@ -354,7 +413,7 @@ export default function YearPicker({
               setInternalIsOpen(false);
             }
           }}
-          popperPlacement="bottom-start"
+          popperPlacement={isCenteredPopup ? "bottom" : "bottom-start"}
           renderCustomHeader={({ decreaseYear, increaseYear }) => (
             <div style={{
               display: 'flex',
@@ -370,7 +429,7 @@ export default function YearPicker({
                   setTimeout(updateYearRange, 0);
                 }}
                 style={{
-                  padding: '0',
+                  padding: '8px',
                   borderRadius: '6px',
                   border: '1px solid #d1d5db',
                   color: '#051411',
@@ -379,8 +438,6 @@ export default function YearPicker({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '28px',
-                  height: '28px',
                   flexShrink: 0,
                 }}
               >
@@ -401,7 +458,7 @@ export default function YearPicker({
                   setTimeout(updateYearRange, 0);
                 }}
                 style={{
-                  padding: '0',
+                  padding: '8px',
                   borderRadius: '6px',
                   border: '1px solid #d1d5db',
                   color: '#051411',
@@ -410,8 +467,6 @@ export default function YearPicker({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '28px',
-                  height: '28px',
                   flexShrink: 0,
                 }}
               >
@@ -421,6 +476,31 @@ export default function YearPicker({
           )}
         />
       </div>
+      {isCenteredPopup && isOpen && (
+        <button
+          type="button"
+          aria-label="Close year picker"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            zIndex: 10001,
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            if (onOpenChange) {
+              onOpenChange(false);
+            } else {
+              setInternalIsOpen(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

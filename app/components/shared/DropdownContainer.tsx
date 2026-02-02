@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { calculateHorizontalPadding } from "@/lib/layout/padding";
 
 type Props = {
   visible: boolean;
@@ -6,6 +7,7 @@ type Props = {
   onClickOutside?: () => void;
   triggerRef?: React.RefObject<HTMLElement | null>;
   minWidth?: string;
+  centeredPopup?: boolean; // When true, opens as centered popup instead of dropdown
 };
 
 export default function DropdownContainer({
@@ -14,8 +16,24 @@ export default function DropdownContainer({
   onClickOutside,
   triggerRef,
   minWidth = "256px",
+  centeredPopup = false,
 }: Readonly<Props>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [horizontalPadding, setHorizontalPadding] = useState(24);
+
+  useEffect(() => {
+    if (!centeredPopup) return;
+    
+    const checkScreenWidth = () => {
+      if (globalThis.window === undefined) return;
+      const width = globalThis.window.innerWidth;
+      setHorizontalPadding(calculateHorizontalPadding(width));
+    };
+    
+    checkScreenWidth();
+    globalThis.window.addEventListener('resize', checkScreenWidth);
+    return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+  }, [centeredPopup]);
 
   useEffect(() => {
     if (!visible) return;
@@ -51,6 +69,91 @@ export default function DropdownContainer({
 
   if (!visible) {
     return null;
+  }
+
+  if (centeredPopup) {
+    return (
+      <>
+        <style>{`
+          .dropdown-container-centered,
+          .dropdown-container-centered *,
+          .dropdown-container-centered::before,
+          .dropdown-container-centered::after,
+          .dropdown-container-centered *::before,
+          .dropdown-container-centered *::after {
+            border-top-color: transparent !important;
+            border-bottom-color: transparent !important;
+            border-left-color: transparent !important;
+            border-right-color: transparent !important;
+          }
+          
+          .dropdown-container-centered[data-popper-placement]::before,
+          .dropdown-container-centered[data-popper-placement]::after {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          
+          .dropdown-container-centered .react-datepicker__triangle,
+          .dropdown-container-centered .react-datepicker-popper::before,
+          .dropdown-container-centered .react-datepicker-popper::after {
+            display: none !important;
+            content: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+        `}</style>
+        <button
+          type="button"
+          aria-label="Close dropdown"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            zIndex: 10001,
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+          }}
+          onClick={onClickOutside}
+        />
+        <div
+          ref={containerRef}
+          className="dropdown-container-centered"
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, calc(-50% + 48px))",
+            display: "flex",
+            width: `calc(100vw - ${horizontalPadding * 2}px)`,
+            minWidth,
+            maxWidth: "600px",
+            padding: "16px",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            gap: "12px",
+            borderRadius: "6px",
+            background: "var(--Colors-Dropdown-Dropdown-Contents-Card, #E5F4F8)",
+            boxShadow: "0 12px 24px rgba(0, 0, 0, 0.0875)",
+            zIndex: 10002,
+            border: "none",
+            overflow: "hidden",
+          }}
+        >
+          {children}
+        </div>
+      </>
+    );
   }
 
   return (

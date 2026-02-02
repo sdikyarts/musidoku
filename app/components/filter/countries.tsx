@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ChoicePill from "../pills/choice";
 import ChooseHeader from "./chooseheader";
 import DropdownContainer from "../shared/DropdownContainer";
@@ -34,12 +34,30 @@ export default function FilterCountries({
     triggerRef,
     countries,
 }: Readonly<Props>) {
+    const [screenWidth, setScreenWidth] = useState(
+        globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
+    );
+
+    useEffect(() => {
+        const checkScreenWidth = () => {
+            if (globalThis.window === undefined) return;
+            setScreenWidth(globalThis.window.innerWidth);
+        };
+        
+        checkScreenWidth();
+        globalThis.window.addEventListener('resize', checkScreenWidth);
+        return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+    }, []);
+
+    const isCenteredPopup = screenWidth < 960;
+
     return (
         <DropdownContainer
             visible={visible}
             onClickOutside={onClickOutside}
             triggerRef={triggerRef}
             minWidth="400px"
+            centeredPopup={isCenteredPopup}
         >
             <ChooseHeader choose="Country" />
             <div

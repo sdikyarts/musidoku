@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ChoicePill from "../pills/choice";
 import ChooseHeader from "./chooseheader";
 import PersonIcon from "../icons/Person";
@@ -26,11 +26,29 @@ export default function FilterArtistType({
     onClickOutside,
     triggerRef,
 }: Readonly<Props>) {
+    const [screenWidth, setScreenWidth] = useState(
+        globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
+    );
+
+    useEffect(() => {
+        const checkScreenWidth = () => {
+            if (globalThis.window === undefined) return;
+            setScreenWidth(globalThis.window.innerWidth);
+        };
+        
+        checkScreenWidth();
+        globalThis.window.addEventListener('resize', checkScreenWidth);
+        return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+    }, []);
+
+    const isCenteredPopup = screenWidth < 960;
+
     return (
         <DropdownContainer
             visible={visible}
             onClickOutside={onClickOutside}
             triggerRef={triggerRef}
+            centeredPopup={isCenteredPopup}
         >
             <ChooseHeader choose="Artist Type(s)" />
             <div
@@ -40,7 +58,7 @@ export default function FilterArtistType({
                     alignContent: "flex-start",
                     gap: "8px",
                     alignSelf: "stretch",
-                    flexWrap: "wrap",
+                    flexWrap: "wrap"
                 }}
             >
                 {TYPE_OPTIONS.map((option) => {
