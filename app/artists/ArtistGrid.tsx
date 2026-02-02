@@ -19,6 +19,7 @@ export type Artist = {
   primaryGenre?: string | null;
   secondaryGenre?: string | null;
   birthDate?: string | null;
+  memberCount?: number | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -52,6 +53,8 @@ export function filterArtists(
   debutEndYear?: number | null,
   birthStartYear?: number | null,
   birthEndYear?: number | null,
+  memberCountMin?: number | null,
+  memberCountMax?: number | null,
 ): Artist[] {
   let filtered = artists;
   
@@ -126,6 +129,31 @@ export function filterArtists(
       }
       
       return birthYear >= birthStartYear && birthYear <= birthEndYear;
+    });
+  }
+  
+  // Filter by member count range
+  if (memberCountMin !== null && memberCountMin !== undefined && memberCountMax !== null && memberCountMax !== undefined) {
+    filtered = filtered.filter((artist) => {
+      // If min = max = 1, show both soloists and groups with 1 member
+      if (memberCountMin === 1 && memberCountMax === 1) {
+        return artist.type === 'solo' || (artist.type === 'group' && artist.memberCount === 1);
+      }
+      
+      // If min = max (but not 1), only show that exact count
+      if (memberCountMin === memberCountMax) {
+        return artist.memberCount === memberCountMin;
+      }
+      
+      // Otherwise, filter by range (only applies to groups)
+      if (artist.type !== 'group') {
+        return false;
+      }
+      
+      return artist.memberCount !== null && 
+             artist.memberCount !== undefined && 
+             artist.memberCount >= memberCountMin && 
+             artist.memberCount <= memberCountMax;
     });
   }
   
@@ -240,12 +268,12 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'>; selectedCountries?: string[]; selectedGenres?: string[]; debutStartYear?: number | null; debutEndYear?: number | null; birthStartYear?: number | null; birthEndYear?: number | null }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'>; selectedCountries?: string[]; selectedGenres?: string[]; debutStartYear?: number | null; debutEndYear?: number | null; birthStartYear?: number | null; birthEndYear?: number | null; memberCountMin?: number | null; memberCountMax?: number | null }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
   const [cardSize, setCardSize] = useState<number>(200);
   
-  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear);
+  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
   const { startIndex } = getPageInfo(
     sortedArtists.length,

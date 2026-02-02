@@ -429,6 +429,35 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+        {(artist.member_count !== null && artist.member_count > 1) || (artist.parsed_artist_type === 'group' && artist.member_count === 1) ? (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#D5CDDF",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GroupIcon color="#6B5C7D" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#6B5C7D",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {artist.member_count} {artist.member_count === 1 ? 'Member' : 'Members'}
+              </p>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import ChoicePill from "../pills/choice";
 import ChooseHeader from "./chooseheader";
 import DropdownContainer from "../shared/DropdownContainer";
 import { getLighterBackground, getDarkerText } from "@/lib/artists/country-colors";
+import SearchIcon from "../icons/SearchIcon";
 
 type CountryOption = {
     code: string;
@@ -37,6 +38,7 @@ export default function FilterCountries({
     const [screenWidth, setScreenWidth] = useState(
         globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
     );
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         const checkScreenWidth = () => {
@@ -51,6 +53,10 @@ export default function FilterCountries({
 
     const isCenteredPopup = screenWidth < 960;
 
+    const filteredCountries = countries.filter((country) =>
+        country.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <DropdownContainer
             visible={visible}
@@ -60,6 +66,35 @@ export default function FilterCountries({
             centeredPopup={isCenteredPopup}
         >
             <ChooseHeader choose="Country" />
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    background: "#E5F4F8",
+                    borderRadius: "6px",
+                    marginBottom: "12px",
+                }}
+            >
+                <SearchIcon color="#6D7FD9" />
+                <input
+                    type="text"
+                    placeholder="Search countries..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                        flex: 1,
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
+                        color: "#051411",
+                        fontFamily: "Inter",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                    }}
+                />
+            </div>
             <div
                 style={{
                     display: "flex",
@@ -73,7 +108,7 @@ export default function FilterCountries({
                     paddingRight: "4px",
                 }}
             >
-                {countries.map((country) => {
+                {filteredCountries.map((country) => {
                     const isSelected = selectedCountries.includes(country.code);
                     const backgroundColor = isSelected 
                         ? country.accentColor 

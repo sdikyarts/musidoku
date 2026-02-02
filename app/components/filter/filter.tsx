@@ -57,6 +57,10 @@ type Props = {
     birthEndYear?: number | null;
     onBirthStartYearChange?: (year: number | null) => void;
     onBirthEndYearChange?: (year: number | null) => void;
+    memberCountMin?: number | null;
+    memberCountMax?: number | null;
+    onMemberCountMinChange?: (count: number | null) => void;
+    onMemberCountMaxChange?: (count: number | null) => void;
 };
 
 type FilterArtistContentProps = Omit<Props, "visible">;
@@ -79,12 +83,12 @@ const genreIcons: Record<string, React.ComponentType<{ color?: string; size?: nu
     'soundtrack': Soundtrack,
 };
 
-export default function FilterArtist({ visible, onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange, selectedCountries = [], onCountriesChange, countryData = [], selectedGenres = [], onGenresChange, genreData = [], debutStartYear, debutEndYear, onDebutStartYearChange = () => {}, onDebutEndYearChange = () => {}, birthStartYear, birthEndYear, onBirthStartYearChange = () => {}, onBirthEndYearChange = () => {} }: Readonly<Props>) {
+export default function FilterArtist({ visible, onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange, selectedCountries = [], onCountriesChange, countryData = [], selectedGenres = [], onGenresChange, genreData = [], debutStartYear, debutEndYear, onDebutStartYearChange = () => {}, onDebutEndYearChange = () => {}, birthStartYear, birthEndYear, onBirthStartYearChange = () => {}, onBirthEndYearChange = () => {}, memberCountMin, memberCountMax, onMemberCountMinChange = () => {}, onMemberCountMaxChange = () => {} }: Readonly<Props>) {
     if (!visible) {
         return null;
     }
 
-    return <FilterArtistContent onClickOutside={onClickOutside} triggerRef={triggerRef} selectedTypes={selectedTypes} onTypesChange={onTypesChange} selectedMisc={selectedMisc} onMiscChange={onMiscChange} selectedCountries={selectedCountries} onCountriesChange={onCountriesChange} countryData={countryData} selectedGenres={selectedGenres} onGenresChange={onGenresChange} genreData={genreData} debutStartYear={debutStartYear} debutEndYear={debutEndYear} onDebutStartYearChange={onDebutStartYearChange} onDebutEndYearChange={onDebutEndYearChange} birthStartYear={birthStartYear} birthEndYear={birthEndYear} onBirthStartYearChange={onBirthStartYearChange} onBirthEndYearChange={onBirthEndYearChange} />;
+    return <FilterArtistContent onClickOutside={onClickOutside} triggerRef={triggerRef} selectedTypes={selectedTypes} onTypesChange={onTypesChange} selectedMisc={selectedMisc} onMiscChange={onMiscChange} selectedCountries={selectedCountries} onCountriesChange={onCountriesChange} countryData={countryData} selectedGenres={selectedGenres} onGenresChange={onGenresChange} genreData={genreData} debutStartYear={debutStartYear} debutEndYear={debutEndYear} onDebutStartYearChange={onDebutStartYearChange} onDebutEndYearChange={onDebutEndYearChange} birthStartYear={birthStartYear} birthEndYear={birthEndYear} onBirthStartYearChange={onBirthStartYearChange} onBirthEndYearChange={onBirthEndYearChange} memberCountMin={memberCountMin} memberCountMax={memberCountMax} onMemberCountMinChange={onMemberCountMinChange} onMemberCountMaxChange={onMemberCountMaxChange} />;
 }
 
 // Helper functions for styling
@@ -163,107 +167,322 @@ const getContainerStyles = (isCentered: boolean, padding: number, screenWidth: n
     };
 };
 
-function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange, selectedCountries = [], onCountriesChange, countryData = [], selectedGenres = [], onGenresChange, genreData = [], debutStartYear, debutEndYear, onDebutStartYearChange = () => {}, onDebutEndYearChange = () => {}, birthStartYear, birthEndYear, onBirthStartYearChange = () => {}, onBirthEndYearChange = () => {} }: Readonly<FilterArtistContentProps>) {
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const typeButtonRef = useRef<HTMLButtonElement | null>(null);
-    const countryButtonRef = useRef<HTMLButtonElement | null>(null);
-    const genreButtonRef = useRef<HTMLButtonElement | null>(null);
+// Helper hook for managing dropdown states
+function useDropdownState() {
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
     const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
     const [openYearPicker, setOpenYearPicker] = useState<'debutStart' | 'debutEnd' | 'birthStart' | 'birthEnd' | null>(null);
-    const [isCenteredPopup, setIsCenteredPopup] = useState(false);
-    const [horizontalPadding, setHorizontalPadding] = useState(24);
-    const [screenWidth, setScreenWidth] = useState(1024);
 
-    const handleToggleType = (type: ArtistTypeValue) => {
-        const newTypes = selectedTypes.includes(type) 
-            ? selectedTypes.filter((value) => value !== type) 
-            : [...selectedTypes, type];
-        onTypesChange?.(newTypes);
-    };
-
-    const handleRemoveType = (type: ArtistTypeValue) => {
-        const newTypes = selectedTypes.filter((value) => value !== type);
-        onTypesChange?.(newTypes);
-    };
-
-    const handleToggleCountry = (countryCode: string) => {
-        const newCountries = selectedCountries.includes(countryCode)
-            ? selectedCountries.filter((code) => code !== countryCode)
-            : [...selectedCountries, countryCode];
-        onCountriesChange?.(newCountries);
-    };
-
-    const handleRemoveCountry = (countryCode: string) => {
-        const newCountries = selectedCountries.filter((code) => code !== countryCode);
-        onCountriesChange?.(newCountries);
-    };
-
-    const handleToggleGenre = (genre: string) => {
-        const newGenres = selectedGenres.includes(genre)
-            ? selectedGenres.filter((g) => g !== genre)
-            : [...selectedGenres, genre];
-        onGenresChange?.(newGenres);
-    };
-
-    const handleRemoveGenre = (genre: string) => {
-        const newGenres = selectedGenres.filter((g) => g !== genre);
-        onGenresChange?.(newGenres);
-    };
-
-    const handleToggleMisc = (misc: 'deceased' | 'disbanded') => {
-        const newMisc = selectedMisc.includes(misc)
-            ? selectedMisc.filter((value) => value !== misc)
-            : [...selectedMisc, misc];
-        onMiscChange?.(newMisc);
-    };
-
-    const handleRemoveMisc = (misc: 'deceased' | 'disbanded') => {
-        const newMisc = selectedMisc.filter((value) => value !== misc);
-        onMiscChange?.(newMisc);
-    };
-
-    const closeTypeDropdown = () => {
+    const closeAllDropdowns = () => {
         setIsTypeDropdownOpen(false);
-    };
-
-    const closeCountryDropdown = () => {
         setIsCountryDropdownOpen(false);
-    };
-
-    const closeGenreDropdown = () => {
         setIsGenreDropdownOpen(false);
     };
-    
-    const handleOpenTypeDropdown = () => {
+
+    const openTypeDropdown = () => {
         setOpenYearPicker(null);
         setIsCountryDropdownOpen(false);
         setIsGenreDropdownOpen(false);
         setIsTypeDropdownOpen((prev) => !prev);
     };
-    
-    const handleOpenCountryDropdown = () => {
+
+    const openCountryDropdown = () => {
         setOpenYearPicker(null);
         setIsTypeDropdownOpen(false);
         setIsGenreDropdownOpen(false);
         setIsCountryDropdownOpen((prev) => !prev);
     };
-    
-    const handleOpenGenreDropdown = () => {
+
+    const openGenreDropdown = () => {
         setOpenYearPicker(null);
         setIsTypeDropdownOpen(false);
         setIsCountryDropdownOpen(false);
         setIsGenreDropdownOpen((prev) => !prev);
     };
 
-    const getCountryInfo = (code: string) => {
-        return countryData.find((c) => c.code === code);
+    return {
+        isTypeDropdownOpen,
+        isCountryDropdownOpen,
+        isGenreDropdownOpen,
+        openYearPicker,
+        setOpenYearPicker,
+        closeAllDropdowns,
+        openTypeDropdown,
+        openCountryDropdown,
+        openGenreDropdown,
+        closeTypeDropdown: () => setIsTypeDropdownOpen(false),
+        closeCountryDropdown: () => setIsCountryDropdownOpen(false),
+        closeGenreDropdown: () => setIsGenreDropdownOpen(false),
+    };
+}
+
+// Helper hook for managing filter handlers
+function useFilterHandlers(props: {
+    selectedTypes: ArtistTypeValue[];
+    onTypesChange?: (types: ArtistTypeValue[]) => void;
+    selectedCountries: string[];
+    onCountriesChange?: (countries: string[]) => void;
+    selectedGenres: string[];
+    onGenresChange?: (genres: string[]) => void;
+    selectedMisc: Array<'deceased' | 'disbanded'>;
+    onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
+}) {
+    const toggleItem = <T,>(items: T[], item: T, onChange?: (items: T[]) => void) => {
+        const newItems = items.includes(item) 
+            ? items.filter((value) => value !== item) 
+            : [...items, item];
+        onChange?.(newItems);
     };
 
-    const getGenreInfo = (value: string) => {
-        return genreData.find((g) => g.value === value);
+    const removeItem = <T,>(items: T[], item: T, onChange?: (items: T[]) => void) => {
+        onChange?.(items.filter((value) => value !== item));
     };
+
+    return {
+        handleToggleType: (type: ArtistTypeValue) => toggleItem(props.selectedTypes, type, props.onTypesChange),
+        handleRemoveType: (type: ArtistTypeValue) => removeItem(props.selectedTypes, type, props.onTypesChange),
+        handleToggleCountry: (code: string) => toggleItem(props.selectedCountries, code, props.onCountriesChange),
+        handleRemoveCountry: (code: string) => removeItem(props.selectedCountries, code, props.onCountriesChange),
+        handleToggleGenre: (genre: string) => toggleItem(props.selectedGenres, genre, props.onGenresChange),
+        handleRemoveGenre: (genre: string) => removeItem(props.selectedGenres, genre, props.onGenresChange),
+        handleToggleMisc: (misc: 'deceased' | 'disbanded') => toggleItem(props.selectedMisc, misc, props.onMiscChange),
+        handleRemoveMisc: (misc: 'deceased' | 'disbanded') => removeItem(props.selectedMisc, misc, props.onMiscChange),
+    };
+}
+
+// Helper to check if any filters are active
+function hasActiveFilters(filters: {
+    selectedTypes: ArtistTypeValue[];
+    selectedMisc: Array<'deceased' | 'disbanded'>;
+    selectedCountries: string[];
+    selectedGenres: string[];
+    debutStartYear: number | null | undefined;
+    debutEndYear: number | null | undefined;
+    birthStartYear: number | null | undefined;
+    birthEndYear: number | null | undefined;
+    memberCountMin: number | null | undefined;
+    memberCountMax: number | null | undefined;
+}): boolean {
+    const { selectedTypes, selectedMisc, selectedCountries, selectedGenres, 
+            debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax } = filters;
+    
+    if (selectedTypes.length > 0 || selectedMisc.length > 0 || selectedCountries.length > 0 || selectedGenres.length > 0) {
+        return true;
+    }
+    
+    const hasDebutRange = debutStartYear !== null && debutStartYear !== undefined && 
+                          debutEndYear !== null && debutEndYear !== undefined;
+    const hasBirthRange = birthStartYear !== null && birthStartYear !== undefined && 
+                          birthEndYear !== null && birthEndYear !== undefined;
+    const hasMemberCount = memberCountMin !== null && memberCountMin !== undefined && 
+                           memberCountMax !== null && memberCountMax !== undefined;
+    
+    return hasDebutRange || hasBirthRange || hasMemberCount;
+}
+
+// Helper to check if a year range is valid
+function isValidYearRange(startYear: number | null | undefined, endYear: number | null | undefined): boolean {
+    return startYear !== null && startYear !== undefined && 
+           endYear !== null && endYear !== undefined && 
+           startYear <= endYear;
+}
+
+// Helper to format year range label
+function formatYearRangeLabel(startYear: number, endYear: number, suffix: string): string {
+    const range = startYear === endYear ? `${startYear}` : `${startYear}-${endYear}`;
+    return suffix ? `${range} ${suffix}` : range;
+}
+
+// Helper to get icon color based on year value
+function getYearIconColor(year: number | null | undefined): string {
+    return year !== null && year !== undefined ? "#F3FDFB" : "#051411";
+}
+
+// Helper to check if a member count range is valid
+function isValidMemberCountRange(min: number | null | undefined, max: number | null | undefined): boolean {
+    return min !== null && min !== undefined && 
+           max !== null && max !== undefined && 
+           min <= max;
+}
+
+// Helper to format member count range label
+function formatMemberCountLabel(min: number, max: number): string {
+    return min === max ? `${min} Members` : `${min}-${max} Members`;
+}
+
+// Member count input component
+function MemberCountInput({ 
+    value, 
+    onChange, 
+    placeholder, 
+    min 
+}: Readonly<{ 
+    value: number | null | undefined; 
+    onChange: (value: number | null) => void; 
+    placeholder: string; 
+    min?: number;
+}>) {
+    const isActive = value !== null && value !== undefined;
+    const [isIncreaseHovered, setIsIncreaseHovered] = useState(false);
+    const [isDecreaseHovered, setIsDecreaseHovered] = useState(false);
+    
+    const handleIncrease = () => {
+        if (value === null || value === undefined) {
+            onChange(min ?? 1);
+        } else {
+            onChange(value + 1);
+        }
+    };
+    
+    const handleDecrease = () => {
+        if (value === null || value === undefined) {
+            return;
+        }
+        if (value <= 1) {
+            onChange(null);
+        } else {
+            onChange(value - 1);
+        }
+    };
+    
+    const iconColor = isActive ? "#F3FDFB" : "#051411";
+    const increaseButtonBg = isIncreaseHovered ? "#6B5C7D" : "transparent";
+    const decreaseButtonBg = isDecreaseHovered ? "#6B5C7D" : "transparent";
+    const increaseIconColor = isIncreaseHovered ? "#F3FDFB" : iconColor;
+    const decreaseIconColor = isDecreaseHovered ? "#F3FDFB" : iconColor;
+    
+    return (
+        <div
+            style={{
+                display: "flex",
+                width: "160px",
+                height: "44px",
+                borderRadius: "6px",
+                background: isActive ? "#6B5C7D" : "#E5F4F8",
+                alignItems: "center",
+                boxSizing: "border-box",
+                position: "relative",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 16px",
+                    flex: 1,
+                }}
+            >
+                <GroupIcon color={iconColor} />
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder={placeholder}
+                    value={value ?? ""}
+                    onChange={(e) => {
+                        const inputValue = e.target.value;
+                        if (inputValue === "") {
+                            onChange(null);
+                        } else {
+                            const numValue = Number(inputValue);
+                            if (!Number.isNaN(numValue) && numValue >= (min ?? 1)) {
+                                onChange(numValue);
+                            }
+                        }
+                    }}
+                    style={{
+                        width: "100%",
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
+                        color: isActive ? "#F3FDFB" : "#051411",
+                        fontFamily: "Inter",
+                        fontSize: "16px",
+                        fontWeight: 550,
+                    }}
+                />
+            </div>
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    position: "absolute",
+                    right: "8px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    gap: "1px",
+                }}
+            >
+                <button
+                    type="button"
+                    onClick={handleIncrease}
+                    onMouseEnter={() => setIsIncreaseHovered(true)}
+                    onMouseLeave={() => setIsIncreaseHovered(false)}
+                    style={{
+                        background: increaseButtonBg,
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "3px 5px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderTopLeftRadius: "4px",
+                        borderTopRightRadius: "4px",
+                        transition: "background 0.2s ease",
+                    }}
+                >
+                    <svg width="8" height="5" viewBox="0 0 8 5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 0L7.4641 4.5H0.535898L4 0Z" fill={increaseIconColor} />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    onClick={handleDecrease}
+                    onMouseEnter={() => setIsDecreaseHovered(true)}
+                    onMouseLeave={() => setIsDecreaseHovered(false)}
+                    style={{
+                        background: decreaseButtonBg,
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "3px 5px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderBottomLeftRadius: "4px",
+                        borderBottomRightRadius: "4px",
+                        transition: "background 0.2s ease",
+                    }}
+                >
+                    <svg width="8" height="5" viewBox="0 0 8 5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 5L0.535898 0.5L7.4641 0.5L4 5Z" fill={decreaseIconColor} />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange, selectedCountries = [], onCountriesChange, countryData = [], selectedGenres = [], onGenresChange, genreData = [], debutStartYear, debutEndYear, onDebutStartYearChange = () => {}, onDebutEndYearChange = () => {}, birthStartYear, birthEndYear, onBirthStartYearChange = () => {}, onBirthEndYearChange = () => {}, memberCountMin, memberCountMax, onMemberCountMinChange = () => {}, onMemberCountMaxChange = () => {} }: Readonly<FilterArtistContentProps>) {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const typeButtonRef = useRef<HTMLButtonElement | null>(null);
+    const countryButtonRef = useRef<HTMLButtonElement | null>(null);
+    const genreButtonRef = useRef<HTMLButtonElement | null>(null);
+    const [isCenteredPopup, setIsCenteredPopup] = useState(false);
+    const [horizontalPadding, setHorizontalPadding] = useState(24);
+    const [screenWidth, setScreenWidth] = useState(1024);
+
+    const dropdownState = useDropdownState();
+    const handlers = useFilterHandlers({
+        selectedTypes, onTypesChange,
+        selectedCountries, onCountriesChange,
+        selectedGenres, onGenresChange,
+        selectedMisc, onMiscChange
+    });
+
+    const getCountryInfo = (code: string) => countryData.find((c) => c.code === code);
+    const getGenreInfo = (value: string) => genreData.find((g) => g.value === value);
 
     useEffect(() => {
         const checkScreenWidth = () => {
@@ -285,9 +504,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
             if (event.target instanceof Node && (containerRef.current.contains(event.target) || triggerRef?.current?.contains(event.target))) {
                 return;
             }
-            setIsTypeDropdownOpen(false);
-            setIsCountryDropdownOpen(false);
-            setIsGenreDropdownOpen(false);
+            dropdownState.closeAllDropdowns();
             onClickOutside?.();
         };
 
@@ -297,7 +514,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
             document.removeEventListener("mousedown", handleClickOutside);
             document.removeEventListener("touchstart", handleClickOutside);
         };
-    }, [onClickOutside, triggerRef]);
+    }, [onClickOutside, triggerRef, dropdownState]);
 
     const containerStyles = getContainerStyles(isCenteredPopup, horizontalPadding, screenWidth);
     const typeButtonStyles = getTypeButtonStyles(selectedTypes.length > 0);
@@ -392,7 +609,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                         gap: "24px"
                     }}
                 >
-                    {(selectedTypes.length > 0 || selectedMisc.length > 0 || selectedCountries.length > 0 || selectedGenres.length > 0 || (debutStartYear !== null && debutStartYear !== undefined && debutEndYear !== null && debutEndYear !== undefined) || (birthStartYear !== null && birthStartYear !== undefined && birthEndYear !== null && birthEndYear !== undefined)) && (
+                    {hasActiveFilters({ selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax }) && (
                         <>
                             <div
                                 style={{
@@ -435,6 +652,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             onDebutEndYearChange?.(null);
                                             onBirthStartYearChange?.(null);
                                             onBirthEndYearChange?.(null);
+                                            onMemberCountMinChange?.(null);
+                                            onMemberCountMaxChange?.(null);
                                         }}
                                         style={{
                                             background: "none",
@@ -471,7 +690,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                                 backgroundColor={typeColors.backgroundColor}
                                                 icon={type === 'solo' ? <PersonIcon color={typeColors.textColor} /> : <GroupIcon color={typeColors.textColor} />}
                                                 showCloseIcon={true}
-                                                onClick={() => handleRemoveType(type)}
+                                                onClick={() => handlers.handleRemoveType(type)}
                                             />
                                         );
                                     })}
@@ -483,7 +702,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             backgroundColor={misc === 'deceased' ? '#6B5C7D' : '#B85555'}
                                             icon={misc === 'deceased' ? <SkullIcon color="#F3FDFB" /> : <BrokenHeartIcon color="#F3FDFB" />}
                                             showCloseIcon={true}
-                                            onClick={() => handleRemoveMisc(misc)}
+                                            onClick={() => handlers.handleRemoveMisc(misc)}
                                         />
                                     ))}
                                     {selectedCountries.map((countryCode) => {
@@ -501,7 +720,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                                     </span>
                                                 }
                                                 showCloseIcon={true}
-                                                onClick={() => handleRemoveCountry(countryCode)}
+                                                onClick={() => handlers.handleRemoveCountry(countryCode)}
                                             />
                                         );
                                     })}
@@ -521,14 +740,14 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                                 backgroundColor={backgroundColor}
                                                 icon={IconComponent ? <IconComponent color="#F3FDFB" size={20} /> : <MusicNoteIcon color="#F3FDFB" />}
                                                 showCloseIcon={true}
-                                                onClick={() => handleRemoveGenre(genreValue)}
+                                                onClick={() => handlers.handleRemoveGenre(genreValue)}
                                             />
                                         );
                                     })}
-                                    {debutStartYear !== null && debutStartYear !== undefined && debutEndYear !== null && debutEndYear !== undefined && debutStartYear <= debutEndYear && (
+                                    {isValidYearRange(debutStartYear, debutEndYear) && (
                                         <CategoryButton
                                             key="debut-year"
-                                            label={debutStartYear === debutEndYear ? `${debutStartYear} Debut` : `${debutStartYear}-${debutEndYear} Debut`}
+                                            label={formatYearRangeLabel(debutStartYear!, debutEndYear!, "Debut")}
                                             textColor="#F3FDFB"
                                             backgroundColor="#3A6B6F"
                                             icon={<CalendarClock color="#F3FDFB" size={20} />}
@@ -539,10 +758,10 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             }}
                                         />
                                     )}
-                                    {birthStartYear !== null && birthStartYear !== undefined && birthEndYear !== null && birthEndYear !== undefined && birthStartYear <= birthEndYear && (
+                                    {isValidYearRange(birthStartYear, birthEndYear) && (
                                         <CategoryButton
                                             key="birth-year"
-                                            label={birthStartYear === birthEndYear ? `Born ${birthStartYear}` : `Born ${birthStartYear}-${birthEndYear}`}
+                                            label={`Born ${formatYearRangeLabel(birthStartYear!, birthEndYear!, "")}`}
                                             textColor="#F3FDFB"
                                             backgroundColor="#947428"
                                             icon={<GiftIcon color="#F3FDFB" size={20} />}
@@ -550,6 +769,20 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             onClick={() => {
                                                 onBirthStartYearChange?.(null);
                                                 onBirthEndYearChange?.(null);
+                                            }}
+                                        />
+                                    )}
+                                    {isValidMemberCountRange(memberCountMin, memberCountMax) && (
+                                        <CategoryButton
+                                            key="member-count"
+                                            label={formatMemberCountLabel(memberCountMin!, memberCountMax!)}
+                                            textColor="#F3FDFB"
+                                            backgroundColor="#6B5C7D"
+                                            icon={<GroupIcon color="#F3FDFB" />}
+                                            showCloseIcon={true}
+                                            onClick={() => {
+                                                onMemberCountMinChange?.(null);
+                                                onMemberCountMaxChange?.(null);
                                             }}
                                         />
                                     )}
@@ -571,7 +804,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                             overflow: "visible",
                             flexDirection: "column",
                             alignItems: "flex-start",
-                            gap: "28px"
+                            gap: "24px"
                         }}
                     >
                         <div
@@ -629,7 +862,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             alwaysShowLabel={true}
                                             width="178px"
                                             chevronDirection={screenWidth < 960 ? 'right' : 'down'}
-                                            onClick={handleOpenTypeDropdown}
+                                            onClick={dropdownState.openTypeDropdown}
                                         />
                                         <div
                                             style={{
@@ -641,9 +874,9 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         >
                                             <FilterArtistType
                                                 selectedTypes={selectedTypes}
-                                                visible={isTypeDropdownOpen}
-                                                onToggleType={handleToggleType}
-                                                onClickOutside={closeTypeDropdown}
+                                                visible={dropdownState.isTypeDropdownOpen}
+                                                onToggleType={handlers.handleToggleType}
+                                                onClickOutside={dropdownState.closeTypeDropdown}
                                                 triggerRef={typeButtonRef}
                                             />
                                         </div>
@@ -663,7 +896,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             label="Country"
                                             alwaysShowLabel={true}
                                             chevronDirection={screenWidth < 960 ? 'right' : 'down'}
-                                            onClick={handleOpenCountryDropdown}
+                                            onClick={dropdownState.openCountryDropdown}
                                         />
                                         <div
                                             style={{
@@ -675,9 +908,9 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         >
                                             <FilterCountries
                                                 selectedCountries={selectedCountries}
-                                                visible={isCountryDropdownOpen}
-                                                onToggleCountry={handleToggleCountry}
-                                                onClickOutside={closeCountryDropdown}
+                                                visible={dropdownState.isCountryDropdownOpen}
+                                                onToggleCountry={handlers.handleToggleCountry}
+                                                onClickOutside={dropdownState.closeCountryDropdown}
                                                 triggerRef={countryButtonRef}
                                                 countries={countryData}
                                             />
@@ -698,7 +931,7 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             label="Genre"
                                             alwaysShowLabel={true}
                                             chevronDirection={screenWidth < 960 ? 'right' : 'down'}
-                                            onClick={handleOpenGenreDropdown}
+                                            onClick={dropdownState.openGenreDropdown}
                                         />
                                         <div
                                             style={{
@@ -710,9 +943,9 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         >
                                             <FilterGenres
                                                 selectedGenres={selectedGenres}
-                                                visible={isGenreDropdownOpen}
-                                                onToggleGenre={handleToggleGenre}
-                                                onClickOutside={closeGenreDropdown}
+                                                visible={dropdownState.isGenreDropdownOpen}
+                                                onToggleGenre={handlers.handleToggleGenre}
+                                                onClickOutside={dropdownState.closeGenreDropdown}
                                                 triggerRef={genreButtonRef}
                                                 genres={genreData}
                                             />
@@ -770,14 +1003,12 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         label="Start"
                                         minYear={1900}
                                         maxYear={new Date().getFullYear()}
-                                        isOpen={openYearPicker === 'debutStart'}
+                                        isOpen={dropdownState.openYearPicker === 'debutStart'}
                                         onOpenChange={(open) => {
                                             if (open) {
-                                                setIsTypeDropdownOpen(false);
-                                                setIsCountryDropdownOpen(false);
-                                                setIsGenreDropdownOpen(false);
+                                                dropdownState.closeAllDropdowns();
                                             }
-                                            setOpenYearPicker(open ? 'debutStart' : null);
+                                            dropdownState.setOpenYearPicker(open ? 'debutStart' : null);
                                         }}
                                         activeColor="#3A6B6F"
                                     />
@@ -798,14 +1029,12 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         label="End"
                                         minYear={debutStartYear || 1900}
                                         maxYear={new Date().getFullYear()}
-                                        isOpen={openYearPicker === 'debutEnd'}
+                                        isOpen={dropdownState.openYearPicker === 'debutEnd'}
                                         onOpenChange={(open) => {
                                             if (open) {
-                                                setIsTypeDropdownOpen(false);
-                                                setIsCountryDropdownOpen(false);
-                                                setIsGenreDropdownOpen(false);
+                                                dropdownState.closeAllDropdowns();
                                             }
-                                            setOpenYearPicker(open ? 'debutEnd' : null);
+                                            dropdownState.setOpenYearPicker(open ? 'debutEnd' : null);
                                         }}
                                         activeColor="#3A6B6F"
                                     />
@@ -849,17 +1078,15 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         label="Start"
                                         minYear={1900}
                                         maxYear={new Date().getFullYear()}
-                                        isOpen={openYearPicker === 'birthStart'}
+                                        isOpen={dropdownState.openYearPicker === 'birthStart'}
                                         onOpenChange={(open) => {
                                             if (open) {
-                                                setIsTypeDropdownOpen(false);
-                                                setIsCountryDropdownOpen(false);
-                                                setIsGenreDropdownOpen(false);
+                                                dropdownState.closeAllDropdowns();
                                             }
-                                            setOpenYearPicker(open ? 'birthStart' : null);
+                                            dropdownState.setOpenYearPicker(open ? 'birthStart' : null);
                                         }}
                                         activeColor="#947428"
-                                        icon={<GiftIcon color={birthStartYear !== null && birthStartYear !== undefined ? "#F3FDFB" : "#051411"} size={32} />}
+                                        icon={<GiftIcon color={getYearIconColor(birthStartYear)} size={32} />}
                                     />
                                     <p
                                         style={{
@@ -878,19 +1105,72 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                         label="End"
                                         minYear={birthStartYear || 1900}
                                         maxYear={new Date().getFullYear()}
-                                        isOpen={openYearPicker === 'birthEnd'}
+                                        isOpen={dropdownState.openYearPicker === 'birthEnd'}
                                         onOpenChange={(open) => {
                                             if (open) {
-                                                setIsTypeDropdownOpen(false);
-                                                setIsCountryDropdownOpen(false);
-                                                setIsGenreDropdownOpen(false);
+                                                dropdownState.closeAllDropdowns();
                                             }
-                                            setOpenYearPicker(open ? 'birthEnd' : null);
+                                            dropdownState.setOpenYearPicker(open ? 'birthEnd' : null);
                                         }}
                                         activeColor="#947428"
-                                        icon={<GiftIcon color={birthEndYear !== null && birthEndYear !== undefined ? "#F3FDFB" : "#051411"} size={32} />}
+                                        icon={<GiftIcon color={getYearIconColor(birthEndYear)} size={32} />}
                                     />
                                 </div>
+                            </div>
+                        </div>
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
+                                justifyContent: "center",
+                                gap: "12px",
+                                width: "100%",
+                            }}
+                        >
+                            <p
+                                style={{
+                                    color: "#6D7FD9",
+                                    fontFamily: "Inter",
+                                    fontSize: "14px",
+                                    fontWeight: 550,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Filter By Member Count Range
+                            </p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    alignContent: "center",
+                                    gap: "16px",
+                                    flexWrap: "nowrap",
+                                }}
+                            >
+                                <MemberCountInput
+                                    value={memberCountMin}
+                                    onChange={onMemberCountMinChange}
+                                    placeholder="Min"
+                                    min={1}
+                                />
+                                <p
+                                    style={{
+                                        color: "#6D7FD9",
+                                        fontFamily: "Inter",
+                                        fontSize: "24px",
+                                        fontWeight: 800,
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    -
+                                </p>
+                                <MemberCountInput
+                                    value={memberCountMax}
+                                    onChange={onMemberCountMaxChange}
+                                    placeholder="Max"
+                                    min={memberCountMin ?? 1}
+                                />
                             </div>
                         </div>
                         <div
@@ -928,14 +1208,14 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     textColor={deceasedStyles.textColor}
                                     backgroundColor={deceasedStyles.backgroundColor}
                                     icon={<SkullIcon color={deceasedStyles.iconColor} />}
-                                    onClick={() => handleToggleMisc('deceased')}
+                                    onClick={() => handlers.handleToggleMisc('deceased')}
                                 />
                                 <CategoryButton
                                     label="Disbanded"
                                     textColor={disbandedStyles.textColor}
                                     backgroundColor={disbandedStyles.backgroundColor}
                                     icon={<BrokenHeartIcon color={disbandedStyles.iconColor} />}
-                                    onClick={() => handleToggleMisc('disbanded')}
+                                    onClick={() => handlers.handleToggleMisc('disbanded')}
                                 />
                             </div>
                         </div>

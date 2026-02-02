@@ -31,6 +31,7 @@ export default async function ArtistsPage() {
     primaryGenre: artist.primary_genre ?? null,
     secondaryGenre: artist.secondary_genre ?? null,
     birthDate: artist.birth_date ?? null,
+    memberCount: artist.member_count ?? null,
   }));
 
   // Format genres for display

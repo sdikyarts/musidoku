@@ -19,6 +19,7 @@ export type Artist = {
   primaryGenre?: string | null;
   secondaryGenre?: string | null;
   birthDate?: string | null;
+  memberCount?: number | null;
 };
 
 export type CountryOption = {
@@ -124,6 +125,16 @@ export default function ArtistsPageClient({
     return year ? Number.parseInt(year, 10) : null;
   });
   
+  const [memberCountMin, setMemberCountMin] = useState<number | null>(() => {
+    const count = searchParams.get('memberMin');
+    return count ? Number.parseInt(count, 10) : null;
+  });
+  
+  const [memberCountMax, setMemberCountMax] = useState<number | null>(() => {
+    const count = searchParams.get('memberMax');
+    return count ? Number.parseInt(count, 10) : null;
+  });
+  
   // Use server-provided data directly
   const countryData = initialCountryData;
   const genreData = initialGenreData;
@@ -164,11 +175,19 @@ export default function ArtistsPageClient({
       params.set('birthEnd', birthEndYear.toString());
     }
     
+    if (memberCountMin !== null) {
+      params.set('memberMin', memberCountMin.toString());
+    }
+    
+    if (memberCountMax !== null) {
+      params.set('memberMax', memberCountMax.toString());
+    }
+    
     const queryString = params.toString();
     const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
     
     router.replace(newUrl, { scroll: false });
-  }, [selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, pathname, router]);
+  }, [selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax, pathname, router]);
 
   useEffect(() => {
     const updatePageSizeAndPadding = () => {
@@ -400,8 +419,8 @@ export default function ArtistsPageClient({
             boxSizing: "border-box",
           }}
         >
-          <ArtistSearch artists={artists} selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} selectedMisc={selectedMisc} onMiscChange={setSelectedMisc} selectedCountries={selectedCountries} onCountriesChange={setSelectedCountries} countryData={countryData} selectedGenres={selectedGenres} onGenresChange={setSelectedGenres} genreData={genreData} debutStartYear={debutStartYear} debutEndYear={debutEndYear} onDebutStartYearChange={setDebutStartYear} onDebutEndYearChange={setDebutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} onBirthStartYearChange={setBirthStartYear} onBirthEndYearChange={setBirthEndYear} />
-          <PaginationBar artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} selectedCountries={selectedCountries} selectedGenres={selectedGenres} debutStartYear={debutStartYear} debutEndYear={debutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} />
+          <ArtistSearch artists={artists} selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} selectedMisc={selectedMisc} onMiscChange={setSelectedMisc} selectedCountries={selectedCountries} onCountriesChange={setSelectedCountries} countryData={countryData} selectedGenres={selectedGenres} onGenresChange={setSelectedGenres} genreData={genreData} debutStartYear={debutStartYear} debutEndYear={debutEndYear} onDebutStartYearChange={setDebutStartYear} onDebutEndYearChange={setDebutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} onBirthStartYearChange={setBirthStartYear} onBirthEndYearChange={setBirthEndYear} memberCountMin={memberCountMin} memberCountMax={memberCountMax} onMemberCountMinChange={setMemberCountMin} onMemberCountMaxChange={setMemberCountMax} />
+          <PaginationBar artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} selectedCountries={selectedCountries} selectedGenres={selectedGenres} debutStartYear={debutStartYear} debutEndYear={debutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} memberCountMin={memberCountMin} memberCountMax={memberCountMax} />
         </div>
         </div>
       </div>
@@ -418,7 +437,7 @@ export default function ArtistsPageClient({
           boxSizing: "border-box",
         }}
       >
-        <ArtistGrid artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} selectedCountries={selectedCountries} selectedGenres={selectedGenres} debutStartYear={debutStartYear} debutEndYear={debutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} />
+        <ArtistGrid artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} selectedCountries={selectedCountries} selectedGenres={selectedGenres} debutStartYear={debutStartYear} debutEndYear={debutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} memberCountMin={memberCountMin} memberCountMax={memberCountMax} />
       </div>
     </>
   );

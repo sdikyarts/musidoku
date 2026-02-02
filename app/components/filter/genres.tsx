@@ -19,6 +19,7 @@ import RnB from "../icons/genres/rnb";
 import Reggae from "../icons/genres/reggae";
 import Rock from "../icons/genres/rock";
 import Soundtrack from "../icons/genres/soundtrack";
+import SearchIcon from "../icons/SearchIcon";
 
 type GenreOption = {
     value: string;
@@ -67,6 +68,7 @@ export default function FilterGenres({
     const [screenWidth, setScreenWidth] = useState(
         globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
     );
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         const checkScreenWidth = () => {
@@ -81,6 +83,10 @@ export default function FilterGenres({
 
     const isCenteredPopup = screenWidth < 960;
 
+    const filteredGenres = genres.filter((genre) =>
+        genre.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <DropdownContainer
             visible={visible}
@@ -90,6 +96,35 @@ export default function FilterGenres({
             centeredPopup={isCenteredPopup}
         >
             <ChooseHeader choose="Genre(s)" />
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    background: "#E5F4F8",
+                    borderRadius: "6px",
+                    marginBottom: "12px",
+                }}
+            >
+                <SearchIcon color="#6D7FD9" />
+                <input
+                    type="text"
+                    placeholder="Search genres..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                        flex: 1,
+                        background: "transparent",
+                        border: "none",
+                        outline: "none",
+                        color: "#051411",
+                        fontFamily: "Inter",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                    }}
+                />
+            </div>
             <div
                 style={{
                     display: "flex",
@@ -103,7 +138,7 @@ export default function FilterGenres({
                     paddingRight: "4px",
                 }}
             >
-                {genres.map((genre) => {
+                {filteredGenres.map((genre) => {
                     const isSelected = selectedGenres.includes(genre.value);
                     const accentColor = GENRE_COLORS[genre.value] || '#8A9AAA';
                     const backgroundColor = isSelected 
