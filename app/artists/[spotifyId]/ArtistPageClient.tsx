@@ -204,6 +204,7 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
         {artist.scraper_name}
       </h1>
       <div style={{ display: "flex", alignItems: "flex-start", gap: '8px', flexWrap: "wrap" }}>
+        {/* 1. Type (Soloist/Group) */}
         <div
           style={{
             display: "flex",
@@ -231,6 +232,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </p>
           </div>
         </div>
+
+        {/* 2. Country */}
         {countryData?.emoji && countryData?.name && (
           <div
             style={{
@@ -260,6 +263,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 3. Primary Genre */}
         <div
           style={{
             display: "flex",
@@ -287,6 +292,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </p>
           </div>
         </div>
+
+        {/* 4. Secondary Genre */}
         {artist.secondary_genre && secondaryGenreBgColor && secondaryGenreTextColor && (
           <div
             style={{
@@ -316,6 +323,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 5. Debut Year */}
         {artist.debut_year && (
           <div
             style={{
@@ -345,6 +354,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 6. Birth Date (Soloists only) */}
         {artist.birth_date && (
           <div
             style={{
@@ -374,6 +385,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 7. Death Date (Soloists only) */}
         {artist.death_date && (
           <div
             style={{
@@ -403,6 +416,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 8. Disbanded Date (Groups only) */}
         {artist.disband_date && (
           <div
             style={{
@@ -432,6 +447,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 9. Member Count (Groups only) */}
         {(artist.member_count !== null && artist.member_count > 1) || (artist.parsed_artist_type === 'group' && artist.member_count === 1) ? (
           <div
             style={{
@@ -461,6 +478,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         ) : null}
+
+        {/* 10. Grammy Nominee */}
         {artist.is_grammy_2026_nominee && (
           <div
             style={{
@@ -490,6 +509,8 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         )}
+
+        {/* 11. Grammy Winner */}
         {artist.is_grammy_2026_winner && (
           <div
             style={{
