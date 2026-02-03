@@ -35,14 +35,16 @@ import Reggae from "@/app/components/icons/genres/reggae";
 import Rock from "@/app/components/icons/genres/rock";
 import Soundtrack from "@/app/components/icons/genres/soundtrack";
 
+import GrammyIcon from "../icons/Grammy";
+
 type Props = {
     visible: boolean;
     onClickOutside?: () => void;
     triggerRef?: React.RefObject<HTMLElement | null>;
     selectedTypes?: ArtistTypeValue[];
     onTypesChange?: (types: ArtistTypeValue[]) => void;
-    selectedMisc?: Array<'deceased' | 'disbanded'>;
-    onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
+    selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
+    onMiscChange?: (misc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>) => void;
     selectedCountries?: string[];
     onCountriesChange?: (countries: string[]) => void;
     countryData?: CountryOption[];
@@ -97,7 +99,7 @@ const getTypeButtonStyles = (isSelected: boolean) => ({
     backgroundColor: isSelected ? "#6D7FD9" : "#E5F4F8",
 });
 
-const getMiscButtonStyles = (isSelected: boolean, misc?: 'deceased' | 'disbanded') => {
+const getMiscButtonStyles = (isSelected: boolean, misc?: 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner') => {
     if (isSelected) {
         if (misc === 'deceased') {
             return {
@@ -110,6 +112,20 @@ const getMiscButtonStyles = (isSelected: boolean, misc?: 'deceased' | 'disbanded
             return {
                 textColor: "#F3FDFB",
                 backgroundColor: "#B85555",
+                iconColor: "#F3FDFB",
+            };
+        }
+        if (misc === 'grammy2026nominee') {
+            return {
+                textColor: "#F3FDFB",
+                backgroundColor: "#C9A961",
+                iconColor: "#F3FDFB",
+            };
+        }
+        if (misc === 'grammy2026winner') {
+            return {
+                textColor: "#F3FDFB",
+                backgroundColor: "#D4AF37",
                 iconColor: "#F3FDFB",
             };
         }
@@ -225,8 +241,8 @@ function useFilterHandlers(props: {
     onCountriesChange?: (countries: string[]) => void;
     selectedGenres: string[];
     onGenresChange?: (genres: string[]) => void;
-    selectedMisc: Array<'deceased' | 'disbanded'>;
-    onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
+    selectedMisc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
+    onMiscChange?: (misc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>) => void;
 }) {
     const toggleItem = <T,>(items: T[], item: T, onChange?: (items: T[]) => void) => {
         const newItems = items.includes(item) 
@@ -246,15 +262,15 @@ function useFilterHandlers(props: {
         handleRemoveCountry: (code: string) => removeItem(props.selectedCountries, code, props.onCountriesChange),
         handleToggleGenre: (genre: string) => toggleItem(props.selectedGenres, genre, props.onGenresChange),
         handleRemoveGenre: (genre: string) => removeItem(props.selectedGenres, genre, props.onGenresChange),
-        handleToggleMisc: (misc: 'deceased' | 'disbanded') => toggleItem(props.selectedMisc, misc, props.onMiscChange),
-        handleRemoveMisc: (misc: 'deceased' | 'disbanded') => removeItem(props.selectedMisc, misc, props.onMiscChange),
+        handleToggleMisc: (misc: 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner') => toggleItem(props.selectedMisc, misc, props.onMiscChange),
+        handleRemoveMisc: (misc: 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner') => removeItem(props.selectedMisc, misc, props.onMiscChange),
     };
 }
 
 // Helper to check if any filters are active
 function hasActiveFilters(filters: {
     selectedTypes: ArtistTypeValue[];
-    selectedMisc: Array<'deceased' | 'disbanded'>;
+    selectedMisc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
     selectedCountries: string[];
     selectedGenres: string[];
     debutStartYear: number | null | undefined;
@@ -473,6 +489,9 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
     const [horizontalPadding, setHorizontalPadding] = useState(24);
     const [screenWidth, setScreenWidth] = useState(1024);
 
+    // Check if Grammy filters should be shown (only until March 31, 2026)
+    const showGrammyFilters = new Date() <= new Date('2026-03-31T23:59:59');
+
     const dropdownState = useDropdownState();
     const handlers = useFilterHandlers({
         selectedTypes, onTypesChange,
@@ -522,6 +541,8 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
     const genreButtonStyles = getTypeButtonStyles(selectedGenres.length > 0);
     const deceasedStyles = getMiscButtonStyles(selectedMisc.includes('deceased'), 'deceased');
     const disbandedStyles = getMiscButtonStyles(selectedMisc.includes('disbanded'), 'disbanded');
+    const grammy2026NomineeStyles = getMiscButtonStyles(selectedMisc.includes('grammy2026nominee'), 'grammy2026nominee');
+    const grammy2026WinnerStyles = getMiscButtonStyles(selectedMisc.includes('grammy2026winner'), 'grammy2026winner');
 
     return (
         <>
@@ -694,17 +715,41 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                             />
                                         );
                                     })}
-                                    {selectedMisc.map((misc) => (
-                                        <CategoryButton
-                                            key={misc}
-                                            label={misc === 'deceased' ? 'Deceased' : 'Disbanded'}
-                                            textColor="#F3FDFB"
-                                            backgroundColor={misc === 'deceased' ? '#6B5C7D' : '#B85555'}
-                                            icon={misc === 'deceased' ? <SkullIcon color="#F3FDFB" /> : <BrokenHeartIcon color="#F3FDFB" />}
-                                            showCloseIcon={true}
-                                            onClick={() => handlers.handleRemoveMisc(misc)}
-                                        />
-                                    ))}
+                                    {selectedMisc.map((misc) => {
+                                        let label = '';
+                                        let backgroundColor = '';
+                                        let icon = null;
+                                        
+                                        if (misc === 'deceased') {
+                                            label = 'Deceased';
+                                            backgroundColor = '#6B5C7D';
+                                            icon = <SkullIcon color="#F3FDFB" />;
+                                        } else if (misc === 'disbanded') {
+                                            label = 'Disbanded';
+                                            backgroundColor = '#B85555';
+                                            icon = <BrokenHeartIcon color="#F3FDFB" />;
+                                        } else if (misc === 'grammy2026nominee') {
+                                            label = '2026 GRAMMYs Nominee';
+                                            backgroundColor = '#C9A961';
+                                            icon = <GrammyIcon color="#F3FDFB" />;
+                                        } else if (misc === 'grammy2026winner') {
+                                            label = '2026 GRAMMYs Winner';
+                                            backgroundColor = '#D4AF37';
+                                            icon = <GrammyIcon color="#F3FDFB" />;
+                                        }
+                                        
+                                        return (
+                                            <CategoryButton
+                                                key={misc}
+                                                label={label}
+                                                textColor="#F3FDFB"
+                                                backgroundColor={backgroundColor}
+                                                icon={icon}
+                                                showCloseIcon={true}
+                                                onClick={() => handlers.handleRemoveMisc(misc)}
+                                            />
+                                        );
+                                    })}
                                     {selectedCountries.map((countryCode) => {
                                         const country = getCountryInfo(countryCode);
                                         if (!country) return null;
@@ -1217,6 +1262,24 @@ function FilterArtistContent({ onClickOutside, triggerRef, selectedTypes = [], o
                                     icon={<BrokenHeartIcon color={disbandedStyles.iconColor} />}
                                     onClick={() => handlers.handleToggleMisc('disbanded')}
                                 />
+                                {showGrammyFilters && (
+                                    <>
+                                        <CategoryButton
+                                            label="2026 GRAMMYs Nominee"
+                                            textColor={grammy2026NomineeStyles.textColor}
+                                            backgroundColor={grammy2026NomineeStyles.backgroundColor}
+                                            icon={<GrammyIcon color={grammy2026NomineeStyles.iconColor} />}
+                                            onClick={() => handlers.handleToggleMisc('grammy2026nominee')}
+                                        />
+                                        <CategoryButton
+                                            label="2026 GRAMMYs Winner"
+                                            textColor={grammy2026WinnerStyles.textColor}
+                                            backgroundColor={grammy2026WinnerStyles.backgroundColor}
+                                            icon={<GrammyIcon color={grammy2026WinnerStyles.iconColor} />}
+                                            onClick={() => handlers.handleToggleMisc('grammy2026winner')}
+                                        />
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

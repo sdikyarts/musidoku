@@ -30,14 +30,16 @@ type Artist = {
   type?: 'solo' | 'group' | 'unknown' | null;
   isDead?: boolean | null;
   isDisbanded?: boolean | null;
+  isGrammy2026Nominee?: boolean | null;
+  isGrammy2026Winner?: boolean | null;
 };
 
 type Props = {
   artists: Artist[];
   selectedTypes?: Array<'solo' | 'group'>;
   onTypesChange?: (types: Array<'solo' | 'group'>) => void;
-  selectedMisc?: Array<'deceased' | 'disbanded'>;
-  onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
+  selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
+  onMiscChange?: (misc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>) => void;
   selectedCountries?: string[];
   onCountriesChange?: (countries: string[]) => void;
   countryData?: Array<{ code: string; name: string; emoji: string; accentColor: string }>;

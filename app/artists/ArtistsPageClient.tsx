@@ -20,6 +20,8 @@ export type Artist = {
   secondaryGenre?: string | null;
   birthDate?: string | null;
   memberCount?: number | null;
+  isGrammy2026Nominee?: boolean | null;
+  isGrammy2026Winner?: boolean | null;
 };
 
 export type CountryOption = {
@@ -90,9 +92,9 @@ export default function ArtistsPageClient({
     return types ? types.split(',').filter(t => t === 'solo' || t === 'group') as Array<'solo' | 'group'> : [];
   });
   
-  const [selectedMisc, setSelectedMisc] = useState<Array<'deceased' | 'disbanded'>>(() => {
+  const [selectedMisc, setSelectedMisc] = useState<Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>>(() => {
     const misc = searchParams.get('misc');
-    return misc ? misc.split(',').filter(m => m === 'deceased' || m === 'disbanded') as Array<'deceased' | 'disbanded'> : [];
+    return misc ? misc.split(',').filter(m => m === 'deceased' || m === 'disbanded' || m === 'grammy2026nominee' || m === 'grammy2026winner') as Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'> : [];
   });
   
   const [selectedCountries, setSelectedCountries] = useState<string[]>(() => {

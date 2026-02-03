@@ -32,6 +32,7 @@ import CalendarClock from "@/app/components/icons/CalendarClock";
 import GiftIcon from "@/app/components/icons/Gift";
 import SkullIcon from "@/app/components/icons/Skull";
 import BrokenHeartIcon from "@/app/components/icons/BrokenHeart";
+import GrammyIcon from "@/app/components/icons/Grammy";
 
 type Artist = {
   scraper_name: string;
@@ -48,6 +49,8 @@ type Artist = {
   secondary_genre: string | null;
   is_dead: boolean | null;
   is_disbanded: boolean | null;
+  is_grammy_2026_nominee: boolean | null;
+  is_grammy_2026_winner: boolean | null;
 };
 
 type PaginationProps = {
@@ -458,6 +461,64 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </div>
           </div>
         ) : null}
+        {artist.is_grammy_2026_nominee && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#FFE5B4",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GrammyIcon color="#B8860B" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#B8860B",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                2026 GRAMMYs Nominee
+              </p>
+            </div>
+          </div>
+        )}
+        {artist.is_grammy_2026_winner && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#FFD700",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GrammyIcon color="#8B6914" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#8B6914",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                2026 GRAMMYs Winner
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

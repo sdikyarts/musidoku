@@ -82,6 +82,10 @@ export const artists = pgTable('artists', {
   is_dead: boolean('is_dead'),
   is_disbanded: boolean('is_disbanded'),
   
+  // Grammy awards
+  is_grammy_2026_nominee: boolean('is_grammy_2026_nominee').default(false),
+  is_grammy_2026_winner: boolean('is_grammy_2026_winner').default(false),
+  
   // roster order to maintain CSV order
   roster_order: integer('roster_order'),
 });

@@ -9,7 +9,7 @@ type Props = {
   artists: Artist[];
   pageSize: number;
   selectedTypes?: Array<'solo' | 'group'>;
-  selectedMisc?: Array<'deceased' | 'disbanded'>;
+  selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
   selectedCountries?: string[];
   selectedGenres?: string[];
   debutStartYear?: number | null;

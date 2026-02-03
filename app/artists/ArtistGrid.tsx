@@ -20,6 +20,8 @@ export type Artist = {
   secondaryGenre?: string | null;
   birthDate?: string | null;
   memberCount?: number | null;
+  isGrammy2026Nominee?: boolean | null;
+  isGrammy2026Winner?: boolean | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -46,7 +48,7 @@ export function filterArtists(
   artists: Artist[],
   queryParam: string | null,
   selectedTypes?: Array<'solo' | 'group'>,
-  selectedMisc?: Array<'deceased' | 'disbanded'>,
+  selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>,
   selectedCountries?: string[],
   selectedGenres?: string[],
   debutStartYear?: number | null,
@@ -79,6 +81,8 @@ export function filterArtists(
       return selectedMisc.some((misc) => {
         if (misc === 'deceased') return artist.isDead === true;
         if (misc === 'disbanded') return artist.isDisbanded === true;
+        if (misc === 'grammy2026nominee') return artist.isGrammy2026Nominee === true;
+        if (misc === 'grammy2026winner') return artist.isGrammy2026Winner === true;
         return false;
       });
     });
@@ -268,7 +272,7 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'>; selectedCountries?: string[]; selectedGenres?: string[]; debutStartYear?: number | null; debutEndYear?: number | null; birthStartYear?: number | null; birthEndYear?: number | null; memberCountMin?: number | null; memberCountMax?: number | null }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>; selectedCountries?: string[]; selectedGenres?: string[]; debutStartYear?: number | null; debutEndYear?: number | null; birthStartYear?: number | null; birthEndYear?: number | null; memberCountMin?: number | null; memberCountMax?: number | null }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
   const [cardSize, setCardSize] = useState<number>(200);
