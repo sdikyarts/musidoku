@@ -55,6 +55,7 @@ export const genreValues = [
   "k-pop",
   "latin",
   "metal",
+  "other",
   "pop",
   "r&b",
   "reggae",

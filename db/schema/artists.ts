@@ -36,6 +36,7 @@ export const genreEnum = pgEnum('genre_enum', [
   'k-pop',
   'latin',
   'metal',
+  'other',
   'pop',
   'r&b',
   'reggae',

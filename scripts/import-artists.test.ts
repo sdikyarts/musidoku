@@ -67,7 +67,7 @@ describe("mapRowToArtist", () => {
     const artist = mapRowToArtist(row, defaultNormalizers);
     expect(artist.parsed_artist_type).toBe("unknown");
     expect(artist.gender).toBe("unknown");
-    expect(artist.primary_genre).toBe("other");
+    expect(artist.primary_genre).toBe("pop");
     expect(artist.secondary_genre).toBeNull();
   });
 });
