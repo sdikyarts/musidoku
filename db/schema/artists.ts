@@ -29,6 +29,7 @@ export const genderEnum = pgEnum('gender_enum', [
 export const genreEnum = pgEnum('genre_enum', [
   'afrobeats',
   'alternative',
+  'bollywood',
   'country',
   'electronic',
   'hip hop',
@@ -40,6 +41,7 @@ export const genreEnum = pgEnum('genre_enum', [
   'r&b',
   'reggae',
   'rock',
+  'soundtrack',
 ]);
 
 export const artists = pgTable('artists', {
@@ -80,6 +82,10 @@ export const artists = pgTable('artists', {
   // added from CSV (nullable because your CSV has blanks)
   is_dead: boolean('is_dead'),
   is_disbanded: boolean('is_disbanded'),
+  
+  // Grammy awards
+  is_grammy_2026_nominee: boolean('is_grammy_2026_nominee').default(false),
+  is_grammy_2026_winner: boolean('is_grammy_2026_winner').default(false),
   
   // roster order to maintain CSV order
   roster_order: integer('roster_order'),

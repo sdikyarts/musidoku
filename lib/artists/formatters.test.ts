@@ -44,6 +44,14 @@ describe("formatGenre", () => {
     expect(formatGenre("hip hop")).toBe("Hip-Hop");
   });
 
+  it("formats k-pop correctly", () => {
+    expect(formatGenre("k-pop")).toBe("K-Pop");
+  });
+
+  it("formats r&b correctly", () => {
+    expect(formatGenre("r&b")).toBe("R&B");
+  });
+
   it("capitalizes hyphenated genres", () => {
     expect(formatGenre("pop-rock")).toBe("Pop-Rock");
     expect(formatGenre("indie-folk")).toBe("Indie-Folk");

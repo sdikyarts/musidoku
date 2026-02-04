@@ -30,24 +30,44 @@ type Artist = {
   type?: 'solo' | 'group' | 'unknown' | null;
   isDead?: boolean | null;
   isDisbanded?: boolean | null;
+  isGrammy2026Nominee?: boolean | null;
+  isGrammy2026Winner?: boolean | null;
 };
 
 type Props = {
   artists: Artist[];
   selectedTypes?: Array<'solo' | 'group'>;
   onTypesChange?: (types: Array<'solo' | 'group'>) => void;
-  selectedMisc?: Array<'deceased' | 'disbanded'>;
-  onMiscChange?: (misc: Array<'deceased' | 'disbanded'>) => void;
+  selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
+  onMiscChange?: (misc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>) => void;
+  selectedCountries?: string[];
+  onCountriesChange?: (countries: string[]) => void;
+  countryData?: Array<{ code: string; name: string; emoji: string; accentColor: string }>;
+  selectedGenres?: string[];
+  onGenresChange?: (genres: string[]) => void;
+  genreData?: Array<{ value: string; label: string }>;
+  debutStartYear?: number | null;
+  debutEndYear?: number | null;
+  onDebutStartYearChange?: (year: number | null) => void;
+  onDebutEndYearChange?: (year: number | null) => void;
+  birthStartYear?: number | null;
+  birthEndYear?: number | null;
+  onBirthStartYearChange?: (year: number | null) => void;
+  onBirthEndYearChange?: (year: number | null) => void;
+  memberCountMin?: number | null;
+  memberCountMax?: number | null;
+  onMemberCountMinChange?: (count: number | null) => void;
+  onMemberCountMaxChange?: (count: number | null) => void;
 };
 
-export default function ArtistSearch({ artists, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange }: Readonly<Props>) {
+export default function ArtistSearch({ artists, selectedTypes = [], onTypesChange, selectedMisc = [], onMiscChange, selectedCountries = [], onCountriesChange, countryData = [], selectedGenres = [], onGenresChange, genreData = [], debutStartYear, debutEndYear, onDebutStartYearChange, onDebutEndYearChange, birthStartYear, birthEndYear, onBirthStartYearChange, onBirthEndYearChange, memberCountMin, memberCountMax, onMemberCountMinChange, onMemberCountMaxChange }: Readonly<Props>) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchValue = searchParams.get("q") ?? "";
   const selectedSort = parseSortParam(searchParams.get("sort"));
   const isSortActive = selectedSort !== DEFAULT_ARTIST_SORT;
-  const isFilterActive = selectedTypes.length > 0 || selectedMisc.length > 0;
+  const isFilterActive = selectedTypes.length > 0 || selectedMisc.length > 0 || selectedCountries.length > 0 || selectedGenres.length > 0 || (debutStartYear !== null && debutStartYear !== undefined && debutEndYear !== null && debutEndYear !== undefined) || (birthStartYear !== null && birthStartYear !== undefined && birthEndYear !== null && birthEndYear !== undefined) || (memberCountMin !== null && memberCountMin !== undefined && memberCountMax !== null && memberCountMax !== undefined);
   const [query, setQuery] = useState(searchValue);
   const [isFocused, setIsFocused] = useState(false);
   const [hoveringResults, setHoveringResults] = useState(false);
@@ -150,7 +170,7 @@ export default function ArtistSearch({ artists, selectedTypes = [], onTypesChang
     .slice(0, 6);
 
   const showResults =
-    (isFocused || hoveringResults) && filteredResults.length > 0;
+    (isFocused || hoveringResults) && query.trim() !== "" && filteredResults.length > 0;
   const showSortOptions = isSortOpen && sortCategories.length > 0;
   const showFilterOptions = isFilterOpen;
 
@@ -321,6 +341,24 @@ export default function ArtistSearch({ artists, selectedTypes = [], onTypesChang
             onTypesChange={onTypesChange}
             selectedMisc={selectedMisc}
             onMiscChange={onMiscChange}
+            selectedCountries={selectedCountries}
+            onCountriesChange={onCountriesChange}
+            countryData={countryData}
+            selectedGenres={selectedGenres}
+            onGenresChange={onGenresChange}
+            genreData={genreData}
+            debutStartYear={debutStartYear}
+            debutEndYear={debutEndYear}
+            onDebutStartYearChange={onDebutStartYearChange}
+            onDebutEndYearChange={onDebutEndYearChange}
+            birthStartYear={birthStartYear}
+            birthEndYear={birthEndYear}
+            onBirthStartYearChange={onBirthStartYearChange}
+            onBirthEndYearChange={onBirthEndYearChange}
+            memberCountMin={memberCountMin}
+            memberCountMax={memberCountMax}
+            onMemberCountMinChange={onMemberCountMinChange}
+            onMemberCountMaxChange={onMemberCountMaxChange}
           />
         </div>
       </div>

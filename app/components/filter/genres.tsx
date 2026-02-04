@@ -4,36 +4,66 @@ import React, { useEffect, useState } from "react";
 import ChoicePill from "../pills/choice";
 import ChooseHeader from "./chooseheader";
 import DropdownContainer from "../shared/DropdownContainer";
-import { getLighterBackground, getDarkerText } from "@/lib/artists/country-colors";
+import { GENRE_COLORS, getGenreLighterBackground, getGenreDarkerText, getSelectedGenreBackground } from "@/lib/artists/genre-colors";
+import Afrobeats from "../icons/genres/afrobeats";
+import Alternative from "../icons/genres/alternative";
+import Bollywood from "../icons/genres/bollywood";
+import Country from "../icons/genres/country";
+import Electronic from "../icons/genres/electronic";
+import HipHop from "../icons/genres/hiphop";
+import KPop from "../icons/genres/kpop";
+import Latin from "../icons/genres/latin";
+import Metal from "../icons/genres/metal";
+import Pop from "../icons/genres/pop";
+import RnB from "../icons/genres/rnb";
+import Reggae from "../icons/genres/reggae";
+import Rock from "../icons/genres/rock";
+import Soundtrack from "../icons/genres/soundtrack";
 import SearchIcon from "../icons/SearchIcon";
 
-type CountryOption = {
-    code: string;
-    name: string;
-    emoji: string;
-    accentColor: string;
+type GenreOption = {
+    value: string;
+    label: string;
 };
 
-export type { CountryOption };
-
 type Props = {
-    selectedCountries: string[];
+    selectedGenres: string[];
     visible: boolean;
-    onToggleCountry: (countryCode: string) => void;
+    onToggleGenre: (genre: string) => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
     onClickOutside?: () => void;
     triggerRef?: React.RefObject<HTMLElement | null>;
-    countries: CountryOption[];
+    genres: GenreOption[];
 };
 
-export default function FilterCountries({
-    selectedCountries,
+export type { GenreOption };
+
+// Map genre values to their icons
+const genreIcons: Record<string, React.ComponentType<{ color?: string; size?: number }>> = {
+    'afrobeats': Afrobeats,
+    'alternative': Alternative,
+    'bollywood': Bollywood,
+    'country': Country,
+    'electronic': Electronic,
+    'hip hop': HipHop,
+    'k-pop': KPop,
+    'latin': Latin,
+    'metal': Metal,
+    'pop': Pop,
+    'r&b': RnB,
+    'reggae': Reggae,
+    'rock': Rock,
+    'soundtrack': Soundtrack,
+};
+
+export default function FilterGenres({
+    selectedGenres,
     visible,
-    onToggleCountry,
+    onToggleGenre,
     onClickOutside,
     triggerRef,
-    countries,
+    genres,
 }: Readonly<Props>) {
     const [screenWidth, setScreenWidth] = useState(
         globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
@@ -53,8 +83,8 @@ export default function FilterCountries({
 
     const isCenteredPopup = screenWidth < 960;
 
-    const filteredCountries = countries.filter((country) =>
-        country.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredGenres = genres.filter((genre) =>
+        genre.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -62,10 +92,10 @@ export default function FilterCountries({
             visible={visible}
             onClickOutside={onClickOutside}
             triggerRef={triggerRef}
-            minWidth="400px"
+            minWidth="320px"
             centeredPopup={isCenteredPopup}
         >
-            <ChooseHeader choose="Country" />
+            <ChooseHeader choose="Genre(s)" />
             <div
                 style={{
                     display: "flex",
@@ -80,7 +110,7 @@ export default function FilterCountries({
                 <SearchIcon color="#6D7FD9" />
                 <input
                     type="text"
-                    placeholder="Search countries..."
+                    placeholder="Search genres..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
@@ -108,35 +138,30 @@ export default function FilterCountries({
                     paddingRight: "4px",
                 }}
             >
-                {filteredCountries.map((country) => {
-                    const isSelected = selectedCountries.includes(country.code);
+                {filteredGenres.map((genre) => {
+                    const isSelected = selectedGenres.includes(genre.value);
+                    const accentColor = GENRE_COLORS[genre.value] || '#8A9AAA';
                     const backgroundColor = isSelected 
-                        ? country.accentColor 
-                        : getLighterBackground(country.accentColor);
+                        ? getSelectedGenreBackground(accentColor)
+                        : getGenreLighterBackground(accentColor);
                     const textColor = isSelected 
-                        ? "#F3FDFB" 
-                        : getDarkerText(country.accentColor);
+                        ? "#F3FDFB"
+                        : getGenreDarkerText(accentColor, genre.value);
+                    
+                    const IconComponent = genreIcons[genre.value];
                     
                     return (
-                        <li key={country.code} style={{ listStyle: "none" }}>
+                        <li key={genre.value} style={{ listStyle: "none" }}>
                             <ChoicePill
-                                label={country.name}
-                                icon={
-                                    <span style={{ fontSize: "20px", lineHeight: 1 }}>
-                                        {country.emoji}
-                                    </span>
-                                }
-                                selectedIcon={
-                                    <span style={{ fontSize: "20px", lineHeight: 1 }}>
-                                        {country.emoji}
-                                    </span>
-                                }
+                                label={genre.label}
+                                icon={IconComponent ? <IconComponent color={textColor} size={20} /> : null}
+                                selectedIcon={IconComponent ? <IconComponent color={textColor} size={20} /> : null}
                                 selected={isSelected}
                                 backgroundColor={backgroundColor}
-                                selectedBackgroundColor={country.accentColor}
+                                selectedBackgroundColor={backgroundColor}
                                 textColor={textColor}
-                                selectedTextColor="#F3FDFB"
-                                onClick={() => onToggleCountry(country.code)}
+                                selectedTextColor={textColor}
+                                onClick={() => onToggleGenre(genre.value)}
                             />
                         </li>
                     );

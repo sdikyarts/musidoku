@@ -1,12 +1,38 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import PersonIcon from "@/app/components/icons/Person";
 import GroupIcon from "@/app/components/icons/Group";
 import ChevronLeftIcon from "@/app/components/icons/ChevronLeft";
 import ChevronRightIcon from "@/app/components/icons/ChevronRight";
 import { calculateNavbarHorizontalPadding } from "@/lib/layout/padding";
+import { CountryKit } from "@andreasnicolaou/country-kit";
+import { COUNTRY_COLORS } from "@/lib/flag-colors";
+import { getLighterBackground, getDarkerText } from "@/lib/artists/country-colors";
+import { getTypeColors, type ArtistType } from "@/lib/artists/type-colors";
+import { formatGenre } from "@/lib/artists/formatters";
+import { GENRE_COLORS, getGenreLighterBackground, getGenreDarkerText } from "@/lib/artists/genre-colors";
+import Afrobeats from "@/app/components/icons/genres/afrobeats";
+import Alternative from "@/app/components/icons/genres/alternative";
+import Bollywood from "@/app/components/icons/genres/bollywood";
+import Country from "@/app/components/icons/genres/country";
+import Electronic from "@/app/components/icons/genres/electronic";
+import HipHop from "@/app/components/icons/genres/hiphop";
+import KPop from "@/app/components/icons/genres/kpop";
+import Latin from "@/app/components/icons/genres/latin";
+import Metal from "@/app/components/icons/genres/metal";
+import Pop from "@/app/components/icons/genres/pop";
+import RnB from "@/app/components/icons/genres/rnb";
+import Reggae from "@/app/components/icons/genres/reggae";
+import Rock from "@/app/components/icons/genres/rock";
+import Soundtrack from "@/app/components/icons/genres/soundtrack";
+import MusicNote from "@/app/components/icons/MusicNote";
+import CalendarClock from "@/app/components/icons/CalendarClock";
+import GiftIcon from "@/app/components/icons/Gift";
+import SkullIcon from "@/app/components/icons/Skull";
+import BrokenHeartIcon from "@/app/components/icons/BrokenHeart";
+import GrammyIcon from "@/app/components/icons/Grammy";
 
 type Artist = {
   scraper_name: string;
@@ -23,6 +49,8 @@ type Artist = {
   secondary_genre: string | null;
   is_dead: boolean | null;
   is_disbanded: boolean | null;
+  is_grammy_2026_nominee: boolean | null;
+  is_grammy_2026_winner: boolean | null;
 };
 
 type PaginationProps = {
@@ -30,7 +58,6 @@ type PaginationProps = {
   nextArtistId: string | null;
   currentPosition: number;
   totalArtists: number;
-  screenWidth: number;
   isAbsolute?: boolean;
 };
 
@@ -41,12 +68,12 @@ type ArtistInfoProps = {
 };
 
 // Style helper functions
-function getPaginationContainerStyle(isAbsolute: boolean) {
+function getPaginationContainerStyle(isAbsolute: boolean, isNarrowScreen: boolean) {
   const baseStyle = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    width: "224px",
+    width: isNarrowScreen && !isAbsolute ? "100%" : "224px",
     gap: "12px",
   };
   
@@ -82,18 +109,60 @@ function getPaginationTextStyle(screenWidth: number) {
   };
 }
 
-function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, screenWidth, isAbsolute = false }: Readonly<PaginationProps>) {
+function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, isAbsolute = false }: Readonly<PaginationProps>) {
+  const router = useRouter();
+  const [screenWidth, setScreenWidth] = useState<number | null>(null);
+  
+  useEffect(() => {
+    const updateWidth = () => {
+      if (globalThis.window !== undefined) {
+        setScreenWidth(globalThis.window.innerWidth);
+      }
+    };
+    
+    updateWidth();
+    globalThis.window.addEventListener('resize', updateWidth);
+    return () => globalThis.window.removeEventListener('resize', updateWidth);
+  }, []);
+  
+  if (screenWidth === null) return null;
+  
+  const isNarrowScreen = screenWidth < 799;
+  
+  const handleNavigation = (artistId: string | null) => {
+    if (!artistId) return;
+    router.push(`/artists/${artistId}`, { scroll: false });
+  };
+  
   return (
-    <div style={getPaginationContainerStyle(isAbsolute)}>
-      <Link href={prevArtistId ? `/artists/${prevArtistId}` : "#"} style={getPaginationLinkStyle(!!prevArtistId)}>
+    <div style={getPaginationContainerStyle(isAbsolute, isNarrowScreen)}>
+      <button
+        onClick={() => handleNavigation(prevArtistId)}
+        disabled={!prevArtistId}
+        style={{
+          ...getPaginationLinkStyle(!!prevArtistId),
+          cursor: prevArtistId ? 'pointer' : 'default',
+          background: 'transparent',
+          border: '1px solid #d1d5db',
+        }}
+      >
         <ChevronLeftIcon size={28} color="#051411" />
-      </Link>
+      </button>
       <span style={getPaginationTextStyle(screenWidth)}>
         {currentPosition} / {totalArtists}
       </span>
-      <Link href={nextArtistId ? `/artists/${nextArtistId}` : "#"} style={getPaginationLinkStyle(!!nextArtistId)}>
+      <button
+        onClick={() => handleNavigation(nextArtistId)}
+        disabled={!nextArtistId}
+        style={{
+          ...getPaginationLinkStyle(!!nextArtistId),
+          cursor: nextArtistId ? 'pointer' : 'default',
+          background: 'transparent',
+          border: '1px solid #d1d5db',
+        }}
+      >
         <ChevronRightIcon size={28} color="#051411" />
-      </Link>
+      </button>
     </div>
   );
 }
@@ -101,6 +170,27 @@ function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalAr
 function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProps>) {
   const isSolo = artist.parsed_artist_type === 'solo';
   const typeLabel = getArtistTypeLabel(artist.parsed_artist_type);
+  
+  // Get artist type colors (unselected style for display)
+  const typeColors = getTypeColors(artist.parsed_artist_type as ArtistType, false);
+  
+  // Get country data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const countryData = CountryKit.getCountryByCode(artist.country.toLowerCase() as any);
+  const countryColor = COUNTRY_COLORS[artist.country] || '#8A9AAA';
+  const countryBgColor = getLighterBackground(countryColor);
+  const countryTextColor = getDarkerText(countryColor);
+
+  // Get genre data
+  const primaryGenreColor = GENRE_COLORS[artist.primary_genre] || '#8A9AAA';
+  const primaryGenreBgColor = getGenreLighterBackground(primaryGenreColor);
+  const primaryGenreTextColor = getGenreDarkerText(primaryGenreColor, artist.primary_genre);
+  const PrimaryGenreIcon = genreIcons[artist.primary_genre];
+
+  const secondaryGenreColor = artist.secondary_genre ? (GENRE_COLORS[artist.secondary_genre] || '#8A9AAA') : null;
+  const secondaryGenreBgColor = artist.secondary_genre ? getGenreLighterBackground(secondaryGenreColor!) : null;
+  const secondaryGenreTextColor = artist.secondary_genre ? getGenreDarkerText(secondaryGenreColor!, artist.secondary_genre) : null;
+  const SecondaryGenreIcon = artist.secondary_genre ? genreIcons[artist.secondary_genre] : null;
 
   return (
     <div
@@ -129,6 +219,7 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
         {artist.scraper_name}
       </h1>
       <div style={{ display: "flex", alignItems: "flex-start", gap: '8px', flexWrap: "wrap" }}>
+        {/* 1. Type (Soloist/Group) */}
         <div
           style={{
             display: "flex",
@@ -136,18 +227,17 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             alignItems: "center",
             gap: pillSize.gap,
             borderRadius: pillSize.borderRadius,
-            color: "#F3FDFB",
-            background: "#6D7FD9",
+            background: typeColors.backgroundColor,
             userSelect: "none",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
             <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {isSolo ? <PersonIcon color="#F3FDFB" size={pillSize.iconSize} /> : <GroupIcon color="#F3FDFB" size={pillSize.iconSize} />}
+              {isSolo ? <PersonIcon color={typeColors.textColor} size={pillSize.iconSize} /> : <GroupIcon color={typeColors.textColor} size={pillSize.iconSize} />}
             </div>
             <p
               style={{
-                color: "#F3FDFB",
+                color: typeColors.textColor,
                 fontSize: pillSize.fontSize,
                 fontWeight: 600,
                 margin: 0,
@@ -157,6 +247,314 @@ function ArtistInfo({ artist, titleFontSize, pillSize }: Readonly<ArtistInfoProp
             </p>
           </div>
         </div>
+
+        {/* 2. Country */}
+        {countryData?.emoji && countryData?.name && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: countryBgColor,
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <span style={{ fontSize: "20px", lineHeight: 1 }}>
+                {countryData.emoji}
+              </span>
+              <p
+                style={{
+                  color: countryTextColor,
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {countryData.name}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 3. Primary Genre */}
+        <div
+          style={{
+            display: "flex",
+            padding: pillSize.padding,
+            alignItems: "center",
+            gap: pillSize.gap,
+            borderRadius: pillSize.borderRadius,
+            background: primaryGenreBgColor,
+            userSelect: "none",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+            <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {PrimaryGenreIcon ? <PrimaryGenreIcon color={primaryGenreTextColor} size={pillSize.iconSize} /> : <MusicNote color={primaryGenreTextColor} size={pillSize.iconSize} />}
+            </div>
+            <p
+              style={{
+                color: primaryGenreTextColor,
+                fontSize: pillSize.fontSize,
+                fontWeight: 600,
+                margin: 0,
+              }}
+            >
+              {formatGenre(artist.primary_genre)}
+            </p>
+          </div>
+        </div>
+
+        {/* 4. Secondary Genre */}
+        {artist.secondary_genre && secondaryGenreBgColor && secondaryGenreTextColor && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: secondaryGenreBgColor,
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {SecondaryGenreIcon ? <SecondaryGenreIcon color={secondaryGenreTextColor} size={pillSize.iconSize} /> : <MusicNote color={secondaryGenreTextColor} size={pillSize.iconSize} />}
+              </div>
+              <p
+                style={{
+                  color: secondaryGenreTextColor,
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {formatGenre(artist.secondary_genre)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 5. Debut Year */}
+        {artist.debut_year && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#C5DBDD",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <CalendarClock color="#3A6B6F" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#3A6B6F",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {artist.debut_year} Debut
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 6. Birth Date (Soloists only) */}
+        {artist.birth_date && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#D6C599",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GiftIcon color="#947428" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#947428",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                Born {formatDate(artist.birth_date)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 7. Death Date (Soloists only) */}
+        {artist.death_date && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#D5CDDF",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <SkullIcon color="#6B5C7D" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#6B5C7D",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                Died {formatDate(artist.death_date)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 8. Disbanded Date (Groups only) */}
+        {artist.disband_date && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#EBCFC9",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <BrokenHeartIcon color="#B85555" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#B85555",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                Disbanded {formatDate(artist.disband_date)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 9. Member Count (Groups only) */}
+        {(artist.member_count !== null && artist.member_count > 1) || (artist.parsed_artist_type === 'group' && artist.member_count === 1) ? (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#D5CDDF",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GroupIcon color="#6B5C7D" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#6B5C7D",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {artist.member_count} {artist.member_count === 1 ? 'Member' : 'Members'}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        {/* 10. Grammy Nominee */}
+        {artist.is_grammy_2026_nominee && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#FFE5B4",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GrammyIcon color="#B8860B" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#B8860B",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                2026 GRAMMYs Nominee
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 11. Grammy Winner */}
+        {artist.is_grammy_2026_winner && (
+          <div
+            style={{
+              display: "flex",
+              padding: pillSize.padding,
+              alignItems: "center",
+              gap: pillSize.gap,
+              borderRadius: pillSize.borderRadius,
+              background: "#FFD700",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: pillSize.gap }}>
+              <div style={{ width: `${pillSize.iconSize}px`, height: `${pillSize.iconSize}px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GrammyIcon color="#8B6914" size={pillSize.iconSize} />
+              </div>
+              <p
+                style={{
+                  color: "#8B6914",
+                  fontSize: pillSize.fontSize,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                2026 GRAMMYs Winner
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -169,24 +567,46 @@ function getArtistTypeLabel(artistType: string): string {
     return 'Unknown';
 }
 
+// Helper function to format date (YYYY-MM-DD to readable format)
+function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month} ${day}, ${year}`;
+}
+
+// Map genre values to their icons
+const genreIcons: Record<string, React.ComponentType<{ color?: string; size?: number }>> = {
+    'afrobeats': Afrobeats,
+    'alternative': Alternative,
+    'bollywood': Bollywood,
+    'country': Country,
+    'electronic': Electronic,
+    'hip hop': HipHop,
+    'k-pop': KPop,
+    'latin': Latin,
+    'metal': Metal,
+    'pop': Pop,
+    'r&b': RnB,
+    'reggae': Reggae,
+    'rock': Rock,
+    'soundtrack': Soundtrack,
+};
+
 // Helper function to get pill sizing
-function getPillSizing(screenWidth: number) {
-    if (screenWidth < 799) {
-        return { padding: "8px", iconSize: 16, fontSize: "14px", gap: "6px", borderRadius: "5px" };
-    }
-    if (screenWidth <= 1080) {
-        return { padding: "10px", iconSize: 18, fontSize: "15px", gap: "7px", borderRadius: "5.5px" };
-    }
-    return { padding: "12px", iconSize: 20, fontSize: "16px", gap: "8px", borderRadius: "6px" };
+function getPillSizing() {
+    // Slightly smaller than current size for all screen widths
+    return { padding: "9px", iconSize: 17, fontSize: "14px", gap: "6px", borderRadius: "5px" };
 }
 
 // Helper function to get title font size
 function getTitleFontSize(screenWidth: number): string {
-    if (screenWidth >= 1280) return "56px";
-    if (screenWidth >= 960) return "48px";
-    if (screenWidth >= 799) return "40px";
-    if (screenWidth >= 640) return "40px";
-    return "32px";
+    if (screenWidth >= 1280) return "48px";
+    if (screenWidth >= 960) return "42px";
+    if (screenWidth >= 799) return "36px";
+    if (screenWidth >= 640) return "32px";
+    return "28px";
 }
 
 // Helper function to calculate image size
@@ -198,8 +618,6 @@ function calculateImageSize(screenWidth: number, padding: number, isWideScreen: 
     const availableWidth = screenWidth - (padding * 2) - 24 - 24;
     return Math.min(640, Math.floor(availableWidth * 0.5));
 }
-
-// Style calculation helpers
 function getImageStyle(imageUrl: string | null, imageSize: number | null) {
   return {
     borderRadius: '8px',
@@ -266,7 +684,7 @@ export default function ArtistPageClient({ artist, prevArtistId, nextArtistId, c
     }
     
     const isWideScreen = screenWidth >= 799;
-    const pillSize = getPillSizing(screenWidth);
+    const pillSize = getPillSizing();
     const imageSize = calculateImageSize(screenWidth, padding, isWideScreen);
     const titleFontSize = getTitleFontSize(screenWidth);
 
@@ -299,7 +717,6 @@ export default function ArtistPageClient({ artist, prevArtistId, nextArtistId, c
                         nextArtistId={nextArtistId}
                         currentPosition={currentPosition}
                         totalArtists={totalArtists}
-                        screenWidth={screenWidth}
                     />
                 )}
                 <div style={getMainContainerStyle(isWideScreen, padding)}>
@@ -316,7 +733,6 @@ export default function ArtistPageClient({ artist, prevArtistId, nextArtistId, c
                             nextArtistId={nextArtistId}
                             currentPosition={currentPosition}
                             totalArtists={totalArtists}
-                            screenWidth={screenWidth}
                             isAbsolute={true}
                         />
                     )}

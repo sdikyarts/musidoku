@@ -48,6 +48,7 @@ export const genderValues = ["male", "female", "non-binary", "mixed", "unknown"]
 export const genreValues = [
   "afrobeats",
   "alternative",
+  "bollywood",
   "country",
   "electronic",
   "hip hop",
@@ -59,6 +60,7 @@ export const genreValues = [
   "r&b",
   "reggae",
   "rock",
+  "soundtrack",
 ] as const;
 
 export function toSafeString(value: unknown): string {
@@ -172,7 +174,7 @@ export function createOptionalEnumNormalizer<T extends string>(
 export const defaultNormalizers: Normalizers = {
   parsedArtistType: createEnumNormalizer(parsedArtistTypeValues, "unknown"),
   gender: createEnumNormalizer(genderValues, "unknown"),
-  primaryGenre: createEnumNormalizer(genreValues, "other"),
+  primaryGenre: createEnumNormalizer(genreValues, "pop"),
   secondaryGenre: createOptionalEnumNormalizer(genreValues),
 };
 

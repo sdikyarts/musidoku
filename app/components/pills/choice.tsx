@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PersonIcon from "../icons/Person";
 
 const placeholderColor = "var(--Colors-Search-Bar-Placeholder, #6D7FD9)";
@@ -39,9 +39,28 @@ const ChoicePill = React.forwardRef<HTMLButtonElement, PillProps>(function Choic
         onClick,
     } = props;
 
+    const [screenWidth, setScreenWidth] = useState(
+        globalThis.window === undefined ? 1024 : globalThis.window.innerWidth
+    );
+
+    useEffect(() => {
+        const checkScreenWidth = () => {
+            if (globalThis.window === undefined) return;
+            setScreenWidth(globalThis.window.innerWidth);
+        };
+        
+        checkScreenWidth();
+        globalThis.window.addEventListener('resize', checkScreenWidth);
+        return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
+    }, []);
+
     const resolvedTextColor = selected ? selectedTextColor : textColor;
     const resolvedBackground = selected ? selectedBackgroundColor : backgroundColor;
     const resolvedIcon = (selected ? selectedIcon ?? icon : icon) ?? <PersonIcon color={resolvedTextColor} />;
+    
+    // Use larger sizing on narrow screens (< 960px) to match artist individual pages
+    const isNarrowScreen = screenWidth < 960;
+    const padding = isNarrowScreen ? "9px" : "8px";
 
     return (
         <button
@@ -55,7 +74,7 @@ const ChoicePill = React.forwardRef<HTMLButtonElement, PillProps>(function Choic
             onClick={onClick}
             style={{
                 display: "flex",
-                padding: "8px",
+                padding,
                 alignItems: "center",
                 gap: "6px",
                 borderRadius: "5px",

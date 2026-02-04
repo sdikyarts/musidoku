@@ -1,9 +1,17 @@
 import { CountryKit } from "@andreasnicolaou/country-kit";
 
 export const formatGenre = (genre: string): string => {
-    if (genre === 'hip hop') {
-        return 'Hip-Hop';
+    // Special cases for specific genres
+    const specialCases: Record<string, string> = {
+        'hip hop': 'Hip-Hop',
+        'k-pop': 'K-Pop',
+        'r&b': 'R&B',
+    };
+    
+    if (specialCases[genre]) {
+        return specialCases[genre];
     }
+    
     return genre
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))

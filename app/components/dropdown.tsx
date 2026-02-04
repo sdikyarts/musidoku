@@ -1,6 +1,7 @@
 import React, { forwardRef, useEffect, useState } from "react";
 import SearchIcon from "./icons/SearchIcon";
 import ArrowDownIcon from "./icons/ArrowDown";
+import ChevronRightIcon from "./icons/ChevronRight";
 
 const placeholderColor = "var(--Colors-Search-Bar-Placeholder, #6D7FD9)";
 
@@ -14,6 +15,8 @@ type DropdownProps = {
   arrowSize?: number;
   contentGap?: number | string;
   alwaysShowLabel?: boolean; // When true, always show label regardless of screen size
+  width?: string | number; // Custom width for the button
+  chevronDirection?: 'down' | 'right'; // Direction of chevron on narrow screens
   onMouseEnter?: React.MouseEventHandler<HTMLButtonElement>;
   onMouseLeave?: React.MouseEventHandler<HTMLButtonElement>;
   onFocus?: React.FocusEventHandler<HTMLButtonElement>;
@@ -31,6 +34,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
   arrowSize,
   contentGap = 8,
   alwaysShowLabel = false,
+  width,
+  chevronDirection = 'down',
   onMouseEnter,
   onMouseLeave,
   onFocus,
@@ -42,11 +47,6 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
   );
 
   useEffect(() => {
-    // If alwaysShowLabel is true, don't track screen width
-    if (alwaysShowLabel) {
-      return;
-    }
-
     const checkScreenWidth = () => {
       if (globalThis.window === undefined) return;
       setScreenWidth(globalThis.window.innerWidth);
@@ -55,10 +55,11 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
     checkScreenWidth();
     globalThis.window.addEventListener('resize', checkScreenWidth);
     return () => globalThis.window.removeEventListener('resize', checkScreenWidth);
-  }, [alwaysShowLabel]);
+  }, []);
 
   // Compute isNarrowScreen based on alwaysShowLabel and screenWidth
   const isNarrowScreen = !alwaysShowLabel && screenWidth <= 959;
+  const showChevronRight = alwaysShowLabel && screenWidth < 960 && chevronDirection === 'right';
 
   const hasActiveFilters = false; // TODO: replace with real filter state when filters are implemented
   const resolvedTextColor = textColor ?? placeholderColor;
@@ -113,7 +114,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
       onClick={onClick}
       style={{
         display: "flex",
-        width: isNarrowScreen ? "44px" : "fit-content", // Fixed width for icon-only mode
+        width: width ?? (isNarrowScreen ? "44px" : "fit-content"), // Use custom width if provided
         height: "44px",
         padding: "10px 16px",
         borderRadius: "6px",
@@ -155,7 +156,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
           </p>
         )}
       </div>
-      {!isNarrowScreen && (
+      {!isNarrowScreen ? (
         <div
           style={{
             display: "flex",
@@ -194,9 +195,15 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(function Dropdown(
               </div>
             </div>
           )}
-          <ArrowDownIcon color={resolvedArrowColor} size={arrowSize} />
+          {showChevronRight ? (
+            <ChevronRightIcon color={resolvedArrowColor} size={arrowSize ?? 20} />
+          ) : (
+            <ArrowDownIcon color={resolvedArrowColor} size={arrowSize} />
+          )}
         </div>
-      )}
+      ) : chevronDirection === 'right' ? (
+        <ChevronRightIcon color={resolvedArrowColor} size={arrowSize ?? 20} />
+      ) : null}
     </button>
   );
 });

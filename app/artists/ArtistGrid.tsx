@@ -15,6 +15,13 @@ export type Artist = {
   type?: 'solo' | 'group' | 'unknown' | null;
   isDead?: boolean | null;
   isDisbanded?: boolean | null;
+  country?: string | null;
+  primaryGenre?: string | null;
+  secondaryGenre?: string | null;
+  birthDate?: string | null;
+  memberCount?: number | null;
+  isGrammy2026Nominee?: boolean | null;
+  isGrammy2026Winner?: boolean | null;
 };
 
 function getPageInfo(artistsLength: number, pageParam: string | null, pageSize: number) {
@@ -41,7 +48,15 @@ export function filterArtists(
   artists: Artist[],
   queryParam: string | null,
   selectedTypes?: Array<'solo' | 'group'>,
-  selectedMisc?: Array<'deceased' | 'disbanded'>,
+  selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>,
+  selectedCountries?: string[],
+  selectedGenres?: string[],
+  debutStartYear?: number | null,
+  debutEndYear?: number | null,
+  birthStartYear?: number | null,
+  birthEndYear?: number | null,
+  memberCountMin?: number | null,
+  memberCountMax?: number | null,
 ): Artist[] {
   let filtered = artists;
   
@@ -66,8 +81,83 @@ export function filterArtists(
       return selectedMisc.some((misc) => {
         if (misc === 'deceased') return artist.isDead === true;
         if (misc === 'disbanded') return artist.isDisbanded === true;
+        if (misc === 'grammy2026nominee') return artist.isGrammy2026Nominee === true;
+        if (misc === 'grammy2026winner') return artist.isGrammy2026Winner === true;
         return false;
       });
+    });
+  }
+  
+  // Filter by countries
+  if (selectedCountries && selectedCountries.length > 0) {
+    filtered = filtered.filter((artist) => 
+      artist.country && selectedCountries.includes(artist.country)
+    );
+  }
+  
+  // Filter by genres (match primary or secondary genre)
+  if (selectedGenres && selectedGenres.length > 0) {
+    filtered = filtered.filter((artist) => 
+      selectedGenres.some(genre => 
+        artist.primaryGenre === genre || artist.secondaryGenre === genre
+      )
+    );
+  }
+  
+  // Filter by debut year range
+  if (debutStartYear !== null && debutStartYear !== undefined && debutEndYear !== null && debutEndYear !== undefined) {
+    filtered = filtered.filter((artist) => 
+      artist.debutYear !== null && 
+      artist.debutYear !== undefined && 
+      artist.debutYear >= debutStartYear && 
+      artist.debutYear <= debutEndYear
+    );
+  }
+  
+  // Filter by birth year range (for solo artists only)
+  if (birthStartYear !== null && birthStartYear !== undefined && birthEndYear !== null && birthEndYear !== undefined) {
+    filtered = filtered.filter((artist) => {
+      // Birth year filtering only applies to solo artists
+      if (artist.type !== 'solo') {
+        return false;
+      }
+      
+      // Extract year from birth_date (format: YYYY-MM-DD)
+      if (!artist.birthDate) {
+        return false;
+      }
+      
+      const birthYear = Number.parseInt(artist.birthDate.substring(0, 4), 10);
+      if (Number.isNaN(birthYear)) {
+        return false;
+      }
+      
+      return birthYear >= birthStartYear && birthYear <= birthEndYear;
+    });
+  }
+  
+  // Filter by member count range
+  if (memberCountMin !== null && memberCountMin !== undefined && memberCountMax !== null && memberCountMax !== undefined) {
+    filtered = filtered.filter((artist) => {
+      // If min = max = 1, show both soloists and groups with 1 member
+      if (memberCountMin === 1 && memberCountMax === 1) {
+        return artist.type === 'solo' || (artist.type === 'group' && artist.memberCount === 1);
+      }
+      
+      // If min = max (but not 1), only show that exact count
+      if (memberCountMin === memberCountMax) {
+        return artist.memberCount === memberCountMin;
+      }
+      
+      // Otherwise, filter by range (only applies to groups)
+      if (artist.type !== 'group') {
+        return false;
+      }
+      
+      return artist.memberCount !== null && 
+             artist.memberCount !== undefined && 
+             artist.memberCount >= memberCountMin && 
+             artist.memberCount <= memberCountMax;
     });
   }
   
@@ -182,12 +272,12 @@ export function ArtistPagination({
   );
 }
 
-export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded'> }>) {
+export function ArtistGrid({ artists, pageSize, selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax }: Readonly<{ artists: Artist[]; pageSize: number; selectedTypes?: Array<'solo' | 'group'>; selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>; selectedCountries?: string[]; selectedGenres?: string[]; debutStartYear?: number | null; debutEndYear?: number | null; birthStartYear?: number | null; birthEndYear?: number | null; memberCountMin?: number | null; memberCountMax?: number | null }>) {
   const searchParams = useSearchParams();
   const [maxColumns, setMaxColumns] = useState<number | null>(null);
   const [cardSize, setCardSize] = useState<number>(200);
   
-  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc);
+  const filteredArtists = filterArtists(artists, searchParams.get("q"), selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax);
   const sortedArtists = sortArtists(filteredArtists, parseSortParam(searchParams.get("sort")));
   const { startIndex } = getPageInfo(
     sortedArtists.length,

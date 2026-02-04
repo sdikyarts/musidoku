@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ArtistSearch from "../components/search/artist";
 import { ArtistGrid } from "./ArtistGrid";
 import PaginationBar from "./PaginationBar";
@@ -14,6 +15,25 @@ export type Artist = {
   type?: 'solo' | 'group' | 'unknown' | null;
   isDead?: boolean | null;
   isDisbanded?: boolean | null;
+  country?: string | null;
+  primaryGenre?: string | null;
+  secondaryGenre?: string | null;
+  birthDate?: string | null;
+  memberCount?: number | null;
+  isGrammy2026Nominee?: boolean | null;
+  isGrammy2026Winner?: boolean | null;
+};
+
+export type CountryOption = {
+  code: string;
+  name: string;
+  emoji: string;
+  accentColor: string;
+};
+
+export type GenreOption = {
+  value: string;
+  label: string;
 };
 
 function calculatePageSize() {
@@ -49,12 +69,127 @@ function calculatePageSize() {
   return totalCards;
 }
 
-export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artist[] }>) {
+export default function ArtistsPageClient({ 
+  artists, 
+  countryData: initialCountryData, 
+  genreData: initialGenreData 
+}: Readonly<{ 
+  artists: Artist[];
+  countryData: CountryOption[];
+  genreData: GenreOption[];
+}>) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const [pageSize, setPageSize] = useState<number | null>(null);
   const [padding, setPadding] = useState<number | null>(null);
   const [screenWidth, setScreenWidth] = useState<number | null>(null);
-  const [selectedTypes, setSelectedTypes] = useState<Array<'solo' | 'group'>>([]);
-  const [selectedMisc, setSelectedMisc] = useState<Array<'deceased' | 'disbanded'>>([]);
+  
+  // Initialize filters from URL search params
+  const [selectedTypes, setSelectedTypes] = useState<Array<'solo' | 'group'>>(() => {
+    const types = searchParams.get('types');
+    return types ? types.split(',').filter(t => t === 'solo' || t === 'group') as Array<'solo' | 'group'> : [];
+  });
+  
+  const [selectedMisc, setSelectedMisc] = useState<Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>>(() => {
+    const misc = searchParams.get('misc');
+    return misc ? misc.split(',').filter(m => m === 'deceased' || m === 'disbanded' || m === 'grammy2026nominee' || m === 'grammy2026winner') as Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'> : [];
+  });
+  
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(() => {
+    const countries = searchParams.get('countries');
+    return countries ? countries.split(',') : [];
+  });
+  
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(() => {
+    const genres = searchParams.get('genres');
+    return genres ? genres.split(',') : [];
+  });
+  
+  const [debutStartYear, setDebutStartYear] = useState<number | null>(() => {
+    const year = searchParams.get('debutStart');
+    return year ? Number.parseInt(year, 10) : null;
+  });
+  
+  const [debutEndYear, setDebutEndYear] = useState<number | null>(() => {
+    const year = searchParams.get('debutEnd');
+    return year ? Number.parseInt(year, 10) : null;
+  });
+  
+  const [birthStartYear, setBirthStartYear] = useState<number | null>(() => {
+    const year = searchParams.get('birthStart');
+    return year ? Number.parseInt(year, 10) : null;
+  });
+  
+  const [birthEndYear, setBirthEndYear] = useState<number | null>(() => {
+    const year = searchParams.get('birthEnd');
+    return year ? Number.parseInt(year, 10) : null;
+  });
+  
+  const [memberCountMin, setMemberCountMin] = useState<number | null>(() => {
+    const count = searchParams.get('memberMin');
+    return count ? Number.parseInt(count, 10) : null;
+  });
+  
+  const [memberCountMax, setMemberCountMax] = useState<number | null>(() => {
+    const count = searchParams.get('memberMax');
+    return count ? Number.parseInt(count, 10) : null;
+  });
+  
+  // Use server-provided data directly
+  const countryData = initialCountryData;
+  const genreData = initialGenreData;
+  
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (selectedTypes.length > 0) {
+      params.set('types', selectedTypes.join(','));
+    }
+    
+    if (selectedMisc.length > 0) {
+      params.set('misc', selectedMisc.join(','));
+    }
+    
+    if (selectedCountries.length > 0) {
+      params.set('countries', selectedCountries.join(','));
+    }
+    
+    if (selectedGenres.length > 0) {
+      params.set('genres', selectedGenres.join(','));
+    }
+    
+    if (debutStartYear !== null) {
+      params.set('debutStart', debutStartYear.toString());
+    }
+    
+    if (debutEndYear !== null) {
+      params.set('debutEnd', debutEndYear.toString());
+    }
+    
+    if (birthStartYear !== null) {
+      params.set('birthStart', birthStartYear.toString());
+    }
+    
+    if (birthEndYear !== null) {
+      params.set('birthEnd', birthEndYear.toString());
+    }
+    
+    if (memberCountMin !== null) {
+      params.set('memberMin', memberCountMin.toString());
+    }
+    
+    if (memberCountMax !== null) {
+      params.set('memberMax', memberCountMax.toString());
+    }
+    
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    
+    router.replace(newUrl, { scroll: false });
+  }, [selectedTypes, selectedMisc, selectedCountries, selectedGenres, debutStartYear, debutEndYear, birthStartYear, birthEndYear, memberCountMin, memberCountMax, pathname, router]);
 
   useEffect(() => {
     const updatePageSizeAndPadding = () => {
@@ -286,8 +421,8 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
             boxSizing: "border-box",
           }}
         >
-          <ArtistSearch artists={artists} selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} selectedMisc={selectedMisc} onMiscChange={setSelectedMisc} />
-          <PaginationBar artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} />
+          <ArtistSearch artists={artists} selectedTypes={selectedTypes} onTypesChange={setSelectedTypes} selectedMisc={selectedMisc} onMiscChange={setSelectedMisc} selectedCountries={selectedCountries} onCountriesChange={setSelectedCountries} countryData={countryData} selectedGenres={selectedGenres} onGenresChange={setSelectedGenres} genreData={genreData} debutStartYear={debutStartYear} debutEndYear={debutEndYear} onDebutStartYearChange={setDebutStartYear} onDebutEndYearChange={setDebutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} onBirthStartYearChange={setBirthStartYear} onBirthEndYearChange={setBirthEndYear} memberCountMin={memberCountMin} memberCountMax={memberCountMax} onMemberCountMinChange={setMemberCountMin} onMemberCountMaxChange={setMemberCountMax} />
+          <PaginationBar artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} selectedCountries={selectedCountries} selectedGenres={selectedGenres} debutStartYear={debutStartYear} debutEndYear={debutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} memberCountMin={memberCountMin} memberCountMax={memberCountMax} />
         </div>
         </div>
       </div>
@@ -304,7 +439,7 @@ export default function ArtistsPageClient({ artists }: Readonly<{ artists: Artis
           boxSizing: "border-box",
         }}
       >
-        <ArtistGrid artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} />
+        <ArtistGrid artists={artists} pageSize={pageSize} selectedTypes={selectedTypes} selectedMisc={selectedMisc} selectedCountries={selectedCountries} selectedGenres={selectedGenres} debutStartYear={debutStartYear} debutEndYear={debutEndYear} birthStartYear={birthStartYear} birthEndYear={birthEndYear} memberCountMin={memberCountMin} memberCountMax={memberCountMax} />
       </div>
     </>
   );
