@@ -16,7 +16,8 @@
     "test:perf:compare": "k6 run k6-scripts/comparison-test.js",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:import": "tsx scripts/import-artists.ts",
-    "db:setup-production": "tsx scripts/setup-production.ts"
+    "db:setup-production": "tsx scripts/setup-production.ts",
+    "db:update-production-genres": "tsx scripts/update-production-genres.ts"
   },
   "dependencies": {
     "@andreasnicolaou/country-kit": "^2.1.0",
