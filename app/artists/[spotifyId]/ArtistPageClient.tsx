@@ -58,7 +58,6 @@ type PaginationProps = {
   nextArtistId: string | null;
   currentPosition: number;
   totalArtists: number;
-  screenWidth: number;
   isAbsolute?: boolean;
 };
 
@@ -110,8 +109,24 @@ function getPaginationTextStyle(screenWidth: number) {
   };
 }
 
-function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, screenWidth, isAbsolute = false }: Readonly<PaginationProps>) {
+function ArtistPagination({ prevArtistId, nextArtistId, currentPosition, totalArtists, isAbsolute = false }: Readonly<PaginationProps>) {
   const router = useRouter();
+  const [screenWidth, setScreenWidth] = useState<number | null>(null);
+  
+  useEffect(() => {
+    const updateWidth = () => {
+      if (globalThis.window !== undefined) {
+        setScreenWidth(globalThis.window.innerWidth);
+      }
+    };
+    
+    updateWidth();
+    globalThis.window.addEventListener('resize', updateWidth);
+    return () => globalThis.window.removeEventListener('resize', updateWidth);
+  }, []);
+  
+  if (screenWidth === null) return null;
+  
   const isNarrowScreen = screenWidth < 799;
   
   const handleNavigation = (artistId: string | null) => {
@@ -580,7 +595,7 @@ const genreIcons: Record<string, React.ComponentType<{ color?: string; size?: nu
 };
 
 // Helper function to get pill sizing
-function getPillSizing(screenWidth: number) {
+function getPillSizing() {
     // Slightly smaller than current size for all screen widths
     return { padding: "9px", iconSize: 17, fontSize: "14px", gap: "6px", borderRadius: "5px" };
 }
@@ -603,8 +618,6 @@ function calculateImageSize(screenWidth: number, padding: number, isWideScreen: 
     const availableWidth = screenWidth - (padding * 2) - 24 - 24;
     return Math.min(640, Math.floor(availableWidth * 0.5));
 }
-
-// Style calculation helpers
 function getImageStyle(imageUrl: string | null, imageSize: number | null) {
   return {
     borderRadius: '8px',
@@ -671,7 +684,7 @@ export default function ArtistPageClient({ artist, prevArtistId, nextArtistId, c
     }
     
     const isWideScreen = screenWidth >= 799;
-    const pillSize = getPillSizing(screenWidth);
+    const pillSize = getPillSizing();
     const imageSize = calculateImageSize(screenWidth, padding, isWideScreen);
     const titleFontSize = getTitleFontSize(screenWidth);
 
@@ -704,7 +717,6 @@ export default function ArtistPageClient({ artist, prevArtistId, nextArtistId, c
                         nextArtistId={nextArtistId}
                         currentPosition={currentPosition}
                         totalArtists={totalArtists}
-                        screenWidth={screenWidth}
                     />
                 )}
                 <div style={getMainContainerStyle(isWideScreen, padding)}>
@@ -721,7 +733,6 @@ export default function ArtistPageClient({ artist, prevArtistId, nextArtistId, c
                             nextArtistId={nextArtistId}
                             currentPosition={currentPosition}
                             totalArtists={totalArtists}
-                            screenWidth={screenWidth}
                             isAbsolute={true}
                         />
                     )}

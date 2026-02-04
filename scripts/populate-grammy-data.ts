@@ -89,4 +89,83 @@ function parseGrammyData(content: string): { nominees: Set<string>, winners: Set
 }
 
 // Normalize artist name for matching
-function normali
+function normalizeArtistName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function main() {
+  try {
+    // Read Grammy data file
+    const grammyFilePath = path.join(process.cwd(), 'data', 'grammys.txt');
+    
+    if (!fs.existsSync(grammyFilePath)) {
+      console.error('Grammy data file not found at:', grammyFilePath);
+      process.exit(1);
+    }
+    
+    const grammyContent = fs.readFileSync(grammyFilePath, 'utf-8');
+    const { nominees, winners } = parseGrammyData(grammyContent);
+    
+    console.log(`Found ${nominees.size} nominees and ${winners.size} winners`);
+    
+    // Get all artists from database
+    const artists = await sql`SELECT spotify_id, scraper_name FROM artists`;
+    
+    let nomineeCount = 0;
+    let winnerCount = 0;
+    
+    // Match and update artists
+    for (const artist of artists) {
+      const normalizedDbName = normalizeArtistName(artist.scraper_name);
+      
+      let isNominee = false;
+      let isWinner = false;
+      
+      // Check if artist is a nominee
+      for (const nominee of nominees) {
+        if (normalizeArtistName(nominee) === normalizedDbName) {
+          isNominee = true;
+          break;
+        }
+      }
+      
+      // Check if artist is a winner
+      for (const winner of winners) {
+        if (normalizeArtistName(winner) === normalizedDbName) {
+          isWinner = true;
+          break;
+        }
+      }
+      
+      // Update database if needed
+      if (isNominee || isWinner) {
+        await sql`
+          UPDATE artists 
+          SET 
+            is_grammy_2026_nominee = ${isNominee},
+            is_grammy_2026_winner = ${isWinner}
+          WHERE spotify_id = ${artist.spotify_id}
+        `;
+        
+        if (isNominee) nomineeCount++;
+        if (isWinner) winnerCount++;
+        
+        console.log(`Updated ${artist.scraper_name}: nominee=${isNominee}, winner=${isWinner}`);
+      }
+    }
+    
+    console.log(`\nUpdated ${nomineeCount} nominees and ${winnerCount} winners in database`);
+    
+  } catch (error) {
+    console.error('Error:', error);
+    process.exit(1);
+  } finally {
+    await sql.end();
+  }
+}
+
+main();

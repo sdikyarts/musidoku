@@ -106,7 +106,6 @@ export default function YearPicker({
   onChange,
   label = "Select Year",
   minYear = 1900,
-  maxYear = new Date().getFullYear(),
   isOpen: externalIsOpen,
   onOpenChange,
   activeColor = "#6D7FD9",

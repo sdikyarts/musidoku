@@ -37,14 +37,16 @@ import Soundtrack from "@/app/components/icons/genres/soundtrack";
 
 import GrammyIcon from "../icons/Grammy";
 
+type MiscFilterValue = 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner';
+
 type Props = {
     visible: boolean;
     onClickOutside?: () => void;
     triggerRef?: React.RefObject<HTMLElement | null>;
     selectedTypes?: ArtistTypeValue[];
     onTypesChange?: (types: ArtistTypeValue[]) => void;
-    selectedMisc?: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
-    onMiscChange?: (misc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>) => void;
+    selectedMisc?: MiscFilterValue[];
+    onMiscChange?: (misc: MiscFilterValue[]) => void;
     selectedCountries?: string[];
     onCountriesChange?: (countries: string[]) => void;
     countryData?: CountryOption[];
@@ -99,7 +101,7 @@ const getTypeButtonStyles = (isSelected: boolean) => ({
     backgroundColor: isSelected ? "#6D7FD9" : "#E5F4F8",
 });
 
-const getMiscButtonStyles = (isSelected: boolean, misc?: 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner') => {
+const getMiscButtonStyles = (isSelected: boolean, misc?: MiscFilterValue) => {
     if (isSelected) {
         if (misc === 'deceased') {
             return {
@@ -241,8 +243,8 @@ function useFilterHandlers(props: {
     onCountriesChange?: (countries: string[]) => void;
     selectedGenres: string[];
     onGenresChange?: (genres: string[]) => void;
-    selectedMisc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
-    onMiscChange?: (misc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>) => void;
+    selectedMisc: MiscFilterValue[];
+    onMiscChange?: (misc: MiscFilterValue[]) => void;
 }) {
     const toggleItem = <T,>(items: T[], item: T, onChange?: (items: T[]) => void) => {
         const newItems = items.includes(item) 
@@ -262,15 +264,15 @@ function useFilterHandlers(props: {
         handleRemoveCountry: (code: string) => removeItem(props.selectedCountries, code, props.onCountriesChange),
         handleToggleGenre: (genre: string) => toggleItem(props.selectedGenres, genre, props.onGenresChange),
         handleRemoveGenre: (genre: string) => removeItem(props.selectedGenres, genre, props.onGenresChange),
-        handleToggleMisc: (misc: 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner') => toggleItem(props.selectedMisc, misc, props.onMiscChange),
-        handleRemoveMisc: (misc: 'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner') => removeItem(props.selectedMisc, misc, props.onMiscChange),
+        handleToggleMisc: (misc: MiscFilterValue) => toggleItem(props.selectedMisc, misc, props.onMiscChange),
+        handleRemoveMisc: (misc: MiscFilterValue) => removeItem(props.selectedMisc, misc, props.onMiscChange),
     };
 }
 
 // Helper to check if any filters are active
 function hasActiveFilters(filters: {
     selectedTypes: ArtistTypeValue[];
-    selectedMisc: Array<'deceased' | 'disbanded' | 'grammy2026nominee' | 'grammy2026winner'>;
+    selectedMisc: MiscFilterValue[];
     selectedCountries: string[];
     selectedGenres: string[];
     debutStartYear: number | null | undefined;

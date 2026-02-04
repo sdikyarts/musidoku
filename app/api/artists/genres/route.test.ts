@@ -9,6 +9,10 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
+type MockSelectReturn = {
+  from: ReturnType<typeof vi.fn>;
+};
+
 describe('GET /api/artists/genres', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -26,7 +30,7 @@ describe('GET /api/artists/genres', () => {
       from: vi.fn().mockResolvedValue(mockData),
     });
 
-    vi.mocked(db.select).mockReturnValue(mockSelect() as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect() as MockSelectReturn);
 
     const response = await GET();
     const data = await response.json();
@@ -40,7 +44,7 @@ describe('GET /api/artists/genres', () => {
       from: vi.fn().mockResolvedValue([]),
     });
 
-    vi.mocked(db.select).mockReturnValue(mockSelect() as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect() as MockSelectReturn);
 
     const response = await GET();
     const data = await response.json();
@@ -54,7 +58,7 @@ describe('GET /api/artists/genres', () => {
       from: vi.fn().mockRejectedValue(new Error('Database error')),
     });
 
-    vi.mocked(db.select).mockReturnValue(mockSelect() as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect() as MockSelectReturn);
 
     const response = await GET();
     const data = await response.json();
@@ -73,7 +77,7 @@ describe('GET /api/artists/genres', () => {
       from: vi.fn().mockResolvedValue(mockData),
     });
 
-    vi.mocked(db.select).mockReturnValue(mockSelect() as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect() as MockSelectReturn);
 
     const response = await GET();
     const data = await response.json();
@@ -93,7 +97,7 @@ describe('GET /api/artists/genres', () => {
       from: vi.fn().mockResolvedValue(mockData),
     });
 
-    vi.mocked(db.select).mockReturnValue(mockSelect() as any);
+    vi.mocked(db.select).mockReturnValue(mockSelect() as MockSelectReturn);
 
     const response = await GET();
     const data = await response.json();

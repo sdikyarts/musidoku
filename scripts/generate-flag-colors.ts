@@ -75,7 +75,7 @@ async function analyzeFlagColor(countryCode: string): Promise<string> {
     const { dominant } = await sharp(image).stats();
     
     // Mute the dominant color
-    let mutedColor = muteColor(dominant, 0.35);
+    const mutedColor = muteColor(dominant, 0.35);
     
     // Try both lighter and darker versions
     const lighterVersion = lightenColor(mutedColor, 0.25);
